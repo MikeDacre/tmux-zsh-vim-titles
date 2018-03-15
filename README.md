@@ -4,6 +4,22 @@ Creates intelligent terminal titles in tmux, zsh, and vim, that work together
 to give information about session, ssh host, path, and currently edited vim
 buffer. Each part is modular and must be installed separately.
 
+## How it works
+
+The three components of this plugin work together to make a useful
+colon-separated title for any combination of tmux, zsh, and vim. For example, if
+you are in a tmux session on your home computer with zsh at your home directory,
+your title will be `t:0:~`, if your tmux session was named fred, it would be
+`t:fred:~`. If you then opened `hi.txt` in vim or nvim, it would be
+`t:fred:v:hi.txt`.
+
+If by contrast, your did those same things over ssh on your remote machine
+hubble, those would be: `t:hubble:0:~`, `t:hubble:fred:~`, `t:hubble:v:hi.txt`
+instead. If you were the root user on hubble, the starting `t:` would instead be
+`rt:`.
+
+![tmux-zsh-vim-titles-demo](./unified-titles-demo.gif)
+
 ## Installation
 
 ### Tmux
