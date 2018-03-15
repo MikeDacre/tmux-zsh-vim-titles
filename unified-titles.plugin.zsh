@@ -20,12 +20,12 @@ function update_title() {
     if [[ -n "$TMUX" ]]; then
         print -Pn "\ek${(%)TITLE}\e\\"
         print -Pn "\e]0;${(%)TITLE}\a"
-    elif [[ "$TERM" =~ "screen*" ]]; then
+    elif [[ "$TERM" =~ screen* ]]; then
         print -Pn "\ek${(%)TITLE}\e\\"
         print -Pn "\e]0;${(%)TITLE}\a"
-    elif [[ "$TERM" =~ "xterm*" ]]; then
+    elif [[ "$TERM" =~ xterm* ]]; then
         print -Pn "\e]0;${(%)TITLE}\a"
-    elif [[ "$TERM" =~ "^rxvt-unicode.*" ]]; then
+    elif [[ "$TERM" =~ ^rxvt-unicode.* ]]; then
         printf '\33]2;%s\007' ${(%)TITLE}
     fi
 }
