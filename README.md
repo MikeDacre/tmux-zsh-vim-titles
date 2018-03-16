@@ -115,13 +115,29 @@ the tmux man page. `#S` is the session name, `#I` is the window number, `#h` is
 the short hostname, it is modified by `zsh_title_hosts`. This variable holds a
 JSON dictionary as a string and has hostname replacements, e.g.
 `'{"fraser-server": "lab"}'`. This will convert the hostname fraser-server to
-lab to shorten the title.
+lab to shorten the title. For example, add something like this to your
+`~/.profile` file and source it from bash and zsh:
+
+```shell
+export zsh_title_hosts='{
+    "fraser-server": "lab",
+    "esmeralda": "esme",
+    "fruster": "fr"
+}'
+```
 
 `#T` is the terminal title and is set by the zsh and vim plugins, without it
 those other plugins **will not display their titles**.
 
-Additionally, if `$tmux_no_set_window_status` is set, the terminal title will
-not be put in the status bar.
+Additionally, if `$tmux_no_set_window_status` is set, the window status tabs
+will not be updated to include the terminal title, by default the window status
+is set to '#I:#T', if `$tmux_no_set_window_status` is set in your shell, you can
+override the window titles with:
+
+```shell
+tmux set-window-option -g window-status-current-format "#I:#T"
+tmux set-window-option -g window-status-format "#I:#T"
+```
 
 Note, after altering any of these settings, run `tmux source ~/.tmux.conf` to
 implement the changes.
