@@ -44,6 +44,11 @@ function! SetTmuxWindowTitle(titleString, titleFormat)
   call system("tmux rename-window " . a:titleString)
 endfunction
 
+function! ResetTmuxWindowTitle(titleFormat)
+  call SetTmuxWindowTitle("", a:titleFormat)
+  call system("tmux automatic-rename on")
+endfunction
+
 function! GetModStr()
   if &modified
     return '+'
@@ -82,7 +87,7 @@ if window_update == 'true' || override == 'true'
       " Set window titles
       if window_update == 'true'
         autocmd BufAdd,BufEnter,BufLeave,BufWritePost,FocusLost,FileChangedShellPost,FileWritePost,InsertEnter,TabEnter,WinEnter * call SetTmuxWindowTitle(simpleTitle, win_vim_status)
-        autocmd VimLeave * call SetTmuxWindowTitle("", win_orig_status)
+        autocmd VimLeave * call ResetTmuxWindowTitle(win_orig_status)
       endif
       " Set title using terminal commands
       if override == 'true'
