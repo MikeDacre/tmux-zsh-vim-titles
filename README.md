@@ -110,8 +110,8 @@ These variations are controlled by the following optional variables:
 - `tmux_title_root='rt:'`
 - `tmux_title_format='#S:#T'`
 - `tmux_title_format_ssh='#h:#S:#T'`
-- `tmux_win_current_fmt='#I:#T'`
-- `tmux_win_other_fmt='#I:#T'`
+- `tmux_win_current_fmt='#I:#W#F'`
+- `tmux_win_other_fmt='#I:#W#F'`
 - `zsh_title_hosts='{}'`
 
 The format strings that start with a `#` are tmux specific and can be found in
@@ -135,15 +135,17 @@ If the hosts did not load after sourcing, try running the script directly:
 `#T` is the terminal title and is set by the zsh and vim plugins, without it
 those other plugins **will not display their titles**.
 
-Additionally, if `$tmux_no_set_window_status` is set, the window status tabs
-will not be updated to include the terminal title, by default the window status
-is set to '#I:#T', if `$tmux_no_set_window_status` is set in your shell, you can
-override the window titles with:
+Additionally, if `$tmux_set_window_status` is set, the window status tabs
+will also be updated to include the terminal title, by default the window status
+is set to '#I:#W#F', you can also ignore this setting and just do it manually:
 
 ```shell
 tmux set-window-option -g window-status-current-format "#I:#T"
 tmux set-window-option -g window-status-format "#I:#T"
 ```
+
+This option also affects ZSH, which will rename the windows with a shortened
+PATH.
 
 Note, after altering any of these settings, run `tmux source ~/.tmux.conf` to
 implement the changes.

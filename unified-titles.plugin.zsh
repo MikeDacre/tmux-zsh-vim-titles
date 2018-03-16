@@ -3,23 +3,30 @@
 # This component is *heavily* inspired by https://github.com/jreese/zsh-titles
 
 # Get formats
-[ -n "$zsh_title_fmt" ] || zsh_title_fmt='${cmd}:${path}'
-[ -n "$path_width" ]    || path_width=40
+[ -n "$zsh_title_fmt" ]  || zsh_title_fmt='${cmd}:${pth}'
+[ -n "$pth_width" ]      || pth_width=60
+[ -n "$win_pth_width" ]  || win_pth_width=25
+
+if [ -n "$tmux_set_window_status" ] && [ -n "$TMUX" ]; then
+    [ -n "$tmux_win_current_fmt" ] || tmux_win_current_fmt='#I:#W#F'
+    [ -n "$tmux_win_other_fmt" ]   || tmux_win_other_fmt='#I:#W#F'
+fi
 
 # Set titles
 function update_title() {
     local cmd
-    local path
+    local pth
     # escape '%' in $1, make nonprintables visible
     cmd=${(V)1//\%/\%\%}
     # remove newlines
     cmd=${cmd//$'\n'/}
-    path="%${path_width}<...<%~"
+    pth="%${pth_width}<...<%~"
     if [ -n "$cmd" ]; then
         TITLE=$(eval echo "${zsh_title_fmt}")
     else
-        TITLE=${path}
+        TITLE=${pth}
     fi
+    # Terminal title
     if [[ -n "$TMUX" ]]; then
         print -Pn "\ek${(%)TITLE}\e\\"
         print -Pn "\e]0;${(%)TITLE}\a"
@@ -30,6 +37,16 @@ function update_title() {
         print -Pn "\e]0;${(%)TITLE}\a"
     elif [[ "$TERM" =~ ^rxvt-unicode.* ]]; then
         printf '\33]2;%s\007' ${(%)TITLE}
+    fi
+    # Tmux Window Title
+    if [[ -n "$tmux_set_window_status" ]] && [[ -n "$TMUX" ]]; then
+        # Force formats
+        tmux set-window-option -g window-status-current-format "${tmux_win_current_fmt}"
+        tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
+
+        # Window title is short path
+        short_pth="%20<...<%~"
+        tmux rename-window "${(%)short_pth}"
     fi
 }
 

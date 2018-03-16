@@ -4,7 +4,6 @@ CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Try to correctly set titles
 tmux set -g set-titles on
-tmux set-window-option -g automatic-rename on
 
 main() {
     # Get default starting strings
@@ -13,8 +12,8 @@ main() {
     [ -n "$tmux_title_root" ]       || tmux_title_root='rt:'
     [ -n "$tmux_title_format" ]     || tmux_title_format='#S:#T'
     [ -n "$tmux_title_format_ssh" ] || tmux_title_format_ssh='#h:#S:#T'
-    [ -n "$tmux_win_current_fmt" ]  || tmux_win_current_fmt='#I:#T'
-    [ -n "$tmux_win_other_fmt" ]    || tmux_win_other_fmt='#I:#T'
+    [ -n "$tmux_win_current_fmt" ]  || tmux_win_current_fmt='#I:#W#F'
+    [ -n "$tmux_win_other_fmt" ]    || tmux_win_other_fmt='#I:#W#F'
 
     if [[ "${USER}" == 'root' ]]; then
         tmux_string="${tmux_title_root}"
@@ -28,9 +27,11 @@ main() {
     fi
     tmux set -g set-titles-string "${tmux_string}"
 
-    if [ -n "$tmux_no_set_window_status" ]; then
-        tmux set-window-option -g window-status-current-format "#I:#T"
-        tmux set-window-option -g window-status-format "#I:#T"
+    if [ -n "$tmux_set_window_status" ]; then
+        tmux set-window-option -g window-status-current-format "${tmux_win_current_fmt}"
+        tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
+        tmux set-option -g automatic-rename-format "${tmux_win_other_fmt}"
+        # tmux set-window-option -g automatic-rename off
     fi
 }
 main
