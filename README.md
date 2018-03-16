@@ -142,8 +142,19 @@ For all other commands, the title will be `command:path`, but for vim or NVIM,
 instead we use `v:<buffer>`, e.g. `v:README.md` or `v:[BUFEXPLORER]`. This title
 is updated immediately on any buffer change, which makes it very useful.
 
-The only thing that can be changed here is the prefix, currently set as `v:` to
-keep it out of the way:
+If vim is not updating the titlebar correctly, try setting
+`$vim_force_tmux_title_change`. If this variable is set, the plugin will force
+change the window title to the appropriate vim title and will issue shell title
+instructions to try to force change the terminal title change. This works in
+almost all cases, but there is a slight visual defect+overhead as the vim buffer
+is redrawn on buffer change. For that reason it is off by default. If your vim
+is not setting the title properly, try adding the following to your `.bashrc`,
+`.zshrc`, or a sourced profile file:
+
+`export vim_force_tmux_title_change=true`
+
+The only format that can be changed for the vim title is the prefix, currently
+set as `v:` to keep it out of the way:
 
 - `vim_title_prefix="v:"`
 
