@@ -28,7 +28,12 @@ main() {
     tmux set -g set-titles-string "${tmux_string}"
 
     if [ -n "$tmux_set_window_status" ]; then
-        tmux set-window-option -g window-status-current-format "${tmux_win_current_fmt}"
+        # Only globally set the widow-current-status-format once, as it is modified
+        # by other apps
+        if [ ! -n "$tmux_window_status_set" ]; then
+            tmux set-window-option -g window-status-current-format "${tmux_win_current_fmt}"
+            export tmux_window_status_set=true
+        fi
         tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
         tmux set-option -g automatic-rename-format "${tmux_win_other_fmt}"
         # tmux set-window-option -g automatic-rename off
