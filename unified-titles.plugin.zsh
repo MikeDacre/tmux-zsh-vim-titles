@@ -41,7 +41,7 @@ function update_title() {
         printf '\33]2;%s\007' ${(%)TITLE}
     fi
     # Tmux Window Title
-    if [ -n "$tmux_set_window_status" ]; then
+    if [ -n "$tmux_set_window_status" ] && [ -n "$TMUX" ]; then
         # Only set the current window format globally once, as it is overriden elsewhere
         tmux set-window-option window-status-current-format "${tmux_win_current_fmt}"
         tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"

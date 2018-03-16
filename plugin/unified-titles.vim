@@ -60,10 +60,12 @@ for i in range(1, 31)
 endfor
 
 " Change title on everything
-let simpleTitle = vim_title_prefix . tr(expand("%:t"), my_asciictrl, my_unisubst)
-let modStr = GetModStr()
-if window_update == 'true' && hastmux == 'true'
-  call SetTmuxWindowTitle(simpleTitle, win_vim_status)
+if window_update == 'true'
+  let simpleTitle = vim_title_prefix . tr(expand("%:t"), my_asciictrl, my_unisubst)
+  let modStr = GetModStr()
+  if hastmux == 'true' || &term == "screen" || &term == "screen-256color"
+    call SetTmuxWindowTitle(simpleTitle, win_vim_status)
+  endif
 endif
 set title titlestring=%{vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)
 
