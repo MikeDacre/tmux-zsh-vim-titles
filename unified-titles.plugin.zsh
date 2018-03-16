@@ -47,7 +47,7 @@ function update_title() {
         tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
 
         # Window title is short path
-        short_pth="%20<...<%~"
+        short_pth="%${win_pth_width}<...<%~"
         tmux rename-window "${(%)short_pth}"
     fi
 }
@@ -83,3 +83,6 @@ function _zsh_title__precmd() {
 autoload -Uz add-zsh-hook
 add-zsh-hook precmd _zsh_title__precmd
 add-zsh-hook preexec _zsh_title__preexec
+
+# Run once as the prompt is loading
+update_title
