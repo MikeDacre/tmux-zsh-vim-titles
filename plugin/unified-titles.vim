@@ -2,6 +2,7 @@
 "  Set Title by Buffer  "
 """""""""""""""""""""""""
 
+" Start fresh
 set notitle
 
 " Get Variables
