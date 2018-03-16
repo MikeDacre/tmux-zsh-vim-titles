@@ -28,50 +28,66 @@ if hastmux == 'true'
   endif
 endif
 
-" Functions
-function! SetTmuxTerminalTitle(titleString)
-  let cmd2 = 'silent !echo -n -e "\033]0;' . a:titleString . '\007"'
-  let cmd3 = 'silent !echo -n -e "\033k' . a:titleString . '\007"'
-  execute cmd2
-  execute cmd3
-  redraw!
-endfunction
+" Run manual updates if requested
+if window_update == 'true' || override == 'true'
 
-function! SetTmuxWindowTitle(titleString, titleFormat)
-  " While on the current window, we will use the terminal title
-  call system('tmux set window-status-current-format ' . shellescape(a:titleFormat))
-  " While on other windows we will still use the name
-  call system("tmux rename-window " . a:titleString)
-endfunction
+  " Override the terminal title if vim messes up
+  function! SetTmuxTerminalTitle(titleString)
+    let cmd2 = 'silent !echo -n -e "\033]0;' . a:titleString . '\007"'
+    let cmd3 = 'silent !echo -n -e "\033k' . a:titleString . '\007"'
+    execute cmd2
+    execute cmd3
+    redraw!
+  endfunction
 
-function! ResetTmuxWindowTitle(titleFormat)
-  call SetTmuxWindowTitle("", a:titleFormat)
-  call system("tmux automatic-rename on")
-endfunction
+  " Set the window name and format
+  function! SetTmuxWindowTitleFormat(titleString, titleFormat)
+    " While on the current window, we will use the terminal title
+    call system('tmux set window-status-current-format ' . shellescape(a:titleFormat))
+    " While on other windows we will still use the name
+    call SetTmuxWindowTitle(a:titleString)
+  endfunction
 
-function! GetModStr()
-  if &modified
-    return '+'
-  endif
-  return ''
-endfunction
+  " Set the window name only
+  function! SetTmuxWindowTitle(titleString)
+    call system("tmux rename-window " . a:titleString)
+  endfunction
 
-" Handle special characters
-let my_asciictrl = nr2char(127)
-let my_unisubst = "␡"
-for i in range(1, 31)
-  let my_asciictrl .= nr2char(i)
-  let my_unisubst  .= nr2char(0x2400 + i, 1)
-endfor
+  " Reset the window name to how it was before
+  function! ResetTmuxWindowTitle(titleFormat)
+    call SetTmuxWindowTitle("", a:titleFormat)
+    call system("tmux automatic-rename on")
+  endfunction
 
-" Change title on everything
-if window_update == 'true'
+  " Try to implement the '+' if file is modified.
+  " Kinda works
+  function! GetModStr()
+    if &modified
+      return '+'
+    endif
+    return ''
+  endfunction
+
+  " Handle special characters
+  let my_asciictrl = nr2char(127)
+  let my_unisubst = "␡"
+  for i in range(1, 31)
+    let my_asciictrl .= nr2char(i)
+    let my_unisubst  .= nr2char(0x2400 + i, 1)
+  endfor
+
+  " Set the initial title. Initial title has no modStr.
   let simpleTitle = vim_title_prefix . tr(expand("%:t"), my_asciictrl, my_unisubst)
-  let modStr = GetModStr()
+endif
+
+" If requested set the initial window name
+if window_update == 'true'
   if hastmux == 'true' || &term == "screen" || &term == "screen-256color"
-    call SetTmuxWindowTitle(simpleTitle, win_vim_status)
+    call SetTmuxWindowTitleFormat(simpleTitle, win_vim_status)
   endif
 endif
+
+" Actually set the terminal title
 set title titlestring=%{vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)
 
 " Use autocommands if the user wants to also update the tmux status window name
@@ -82,16 +98,16 @@ if window_update == 'true' || override == 'true'
     au!
     " Only do anything if we are in tmux
     if hastmux == 'true' || &term == "screen" || &term == "screen-256color"
-      autocmd BufAdd,BufEnter,BufLeave,BufWritePost,FocusLost,FileChangedShellPost,FileWritePost,InsertEnter,TabEnter,WinEnter * let modStr = GetModStr()
-      autocmd BufAdd,BufEnter,BufLeave,BufWritePost,FocusLost,FileChangedShellPost,FileWritePost,InsertEnter,TabEnter,WinEnter * let simpleTitle = vim_title_prefix . tr(expand("%:t"), my_asciictrl, my_unisubst) . modStr
+      autocmd BufEnter,BufLeave,BufWritePost,FileWritePost,InsertEnter,TabEnter,WinEnter * let modStr = GetModStr()
+      autocmd BufEnter,BufLeave,BufWritePost,FileWritePost,InsertEnter,TabEnter,WinEnter * let simpleTitle = vim_title_prefix . tr(expand("%:t"), my_asciictrl, my_unisubst) . modStr
       " Set window titles
       if window_update == 'true'
-        autocmd BufAdd,BufEnter,BufLeave,BufWritePost,FocusLost,FileChangedShellPost,FileWritePost,InsertEnter,TabEnter,WinEnter * call SetTmuxWindowTitle(simpleTitle, win_vim_status)
+        autocmd BufEnter,BufLeave,BufWritePost,FileWritePost,InsertEnter,TabEnter,WinEnter * call SetTmuxWindowTitle(simpleTitle)
         autocmd VimLeave * call ResetTmuxWindowTitle(win_orig_status)
       endif
       " Set title using terminal commands
       if override == 'true'
-        autocmd BufAdd,BufEnter,BufLeave,BufWritePost,FileChangedShellPost,FileWritePost,InsertEnter,TabEnter,WinEnter * call SetTmuxTerminalTitle(simpleTitle)
+        autocmd BufEnter,BufWritePost,TabEnter,WinEnter * call SetTmuxTerminalTitle(simpleTitle)
       endif
       " Clear title on leaving vim
       autocmd VimLeave * set t_ts=k\
