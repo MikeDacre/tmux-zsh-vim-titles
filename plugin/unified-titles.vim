@@ -50,6 +50,7 @@ if override == 'true'
         let cmd3 = 'silent !echo -n -e "\033k' . a:titleString . '\007"'
         execute cmd2
         execute cmd3
+        call system("tmux rename-window " . a:titleString)
         redraw!
   endfunction
 
@@ -58,7 +59,6 @@ if override == 'true'
     let tmux_win_fmt = system('[ -n "$tmux_win_current_fmt" ] || tmux_win_current_fmt="#I:#T"; echo "${tmux_win_current_fmt}"')
     augroup termTitleHack
       au!
-      autocmd BufReadPost,FileReadPost,BufNewFile,BufEnter * call system("tmux rename-window " . &titlestring)
       autocmd BufEnter * call SetTerminalTitle(&titlestring)
       autocmd VimLeave * call system("tmux rename-window " . tmux_win_fmt)
     augroup END
