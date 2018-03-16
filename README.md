@@ -98,13 +98,21 @@ with a variety of shell variables. For example you could change the tmux prompt,
 disable setting the window tab names, or change the delimiter from `:` to
 something else.
 
+If you want to update your status bar window tabs with a mini version of the
+title text, set `$tmux_set_window_status` in the shell that you call tmux from:
+
+```shell
+export $tmux_set_window_status=true
+```
+
 ### Tmux title configuration
 
 Tmux is the first part of the title, the default title is `t:<session>:` on a
 local machine, or `t:<session>:<hostname>` on a remote machine. The `t:` is
 replaced with `rt` if you are root.
 
-These variations are controlled by the following optional variables:
+These variations are controlled by the following optional variables (dafaults
+displayed):
 
 - `tmux_title_start='t:'`
 - `tmux_title_root='rt:'`
