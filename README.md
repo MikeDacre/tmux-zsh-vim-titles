@@ -129,6 +129,8 @@ export zsh_title_hosts='{
     "fruster": "fr"
 }'
 ```
+If the hosts did not load after sourcing, try running the script directly:
+`bash ~/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux`
 
 `#T` is the terminal title and is set by the zsh and vim plugins, without it
 those other plugins **will not display their titles**.
