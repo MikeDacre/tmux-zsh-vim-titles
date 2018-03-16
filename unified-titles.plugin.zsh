@@ -1,7 +1,10 @@
 #!/usr/bin/env zsh
+# Set the ZSH component of the title string
+# This component is *heavily* inspired by https://github.com/jreese/zsh-titles
 
 # Get formats
 [ -n "$zsh_title_fmt" ] || zsh_title_fmt='${cmd}:${path}'
+[ -n "$path_width" ]    || path_width=40
 
 # Set titles
 function update_title() {
@@ -11,7 +14,7 @@ function update_title() {
     cmd=${(V)1//\%/\%\%}
     # remove newlines
     cmd=${cmd//$'\n'/}
-    path="%20<...<%~"
+    path="%${path_width}<...<%~"
     if [ -n "$cmd" ]; then
         TITLE=$(eval echo "${zsh_title_fmt}")
     else

@@ -4,6 +4,10 @@ Creates intelligent terminal titles in tmux, zsh, and vim, that work together
 to give information about session, ssh host, path, and currently edited vim
 buffer. Each part is modular and must be installed separately.
 
+Note: the ZSH component of this is *heavily* influenced by
+[jreese/zsh-titles](https://github.com/jreese/zsh-titles). The other components
+are inspired by a variety of stack exchange answers.
+
 ## How it works
 
 The three components of this plugin work together to make a useful
@@ -148,13 +152,21 @@ Without this plugin, the default ZSH title is just the hostname. This plugin
 replaces this with the directory path or `command:path` if a command is running
 in the terminal.
 
-There is only one customization for this component:
+There are two variables to customize the ZSH portion of the title:
 
 - `zsh_title_fmt='${cmd}:${path}'`
+- `path_width=40`
 
-Not the single quotes, this is very important to prevent the variable from being
-expanded to early, you must not use `"{cmd}:${path}"`, that will result in the
-string `:` being passed to the plugin.
+`zsh_title_fmt` controls the overall formatting of the title. Note the single
+quotes, this is very important to prevent the variable from being expanded to
+early, you must not use `"{cmd}:${path}"`, that will result in the string `:`
+being passed to the plugin.
+
+`path_width` controls the maximum width of the path to the current directory in
+the title, if the path is longer than this, only the last n characters of the
+path will be shown. Note, this uses named paths, so HOME is replaced with `~`
+and any hashed directories are replaced with their name, e.g. with
+[cdbk](https://github.com/MikeDacre/cdbk).
 
 ### Vim/NVIM title configuration
 
