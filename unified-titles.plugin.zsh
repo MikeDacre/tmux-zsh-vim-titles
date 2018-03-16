@@ -10,6 +10,8 @@
 if [ -n "$tmux_set_window_status" ] && [ -n "$TMUX" ]; then
     [ -n "$tmux_win_current_fmt" ] || tmux_win_current_fmt='#I:#W#F'
     [ -n "$tmux_win_other_fmt" ]   || tmux_win_other_fmt='#I:#W#F'
+    tmux set-window-option -g window-status-current-format "${tmux_win_current_fmt}"
+    tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
 fi
 
 # Set titles
@@ -39,9 +41,9 @@ function update_title() {
         printf '\33]2;%s\007' ${(%)TITLE}
     fi
     # Tmux Window Title
-    if [[ -n "$tmux_set_window_status" ]] && [[ -n "$TMUX" ]]; then
-        # Force formats
-        tmux set-window-option -g window-status-current-format "${tmux_win_current_fmt}"
+    if [ -n "$tmux_set_window_status" ]; then
+        # Only set the current window format globally once, as it is overriden elsewhere
+        tmux set-window-option window-status-current-format "${tmux_win_current_fmt}"
         tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
 
         # Window title is short path

@@ -122,6 +122,9 @@ displayed):
 - `tmux_win_other_fmt='#I:#W#F'`
 - `zsh_title_hosts='{}'`
 
+Note, after altering any of these settings, run `tmux source ~/.tmux.conf` to
+implement the changes.
+
 The format strings that start with a `#` are tmux specific and can be found in
 the tmux man page. `#S` is the session name, `#I` is the window number, `#h` is
 the short hostname, it is modified by `zsh_title_hosts`. This variable holds a
@@ -143,20 +146,21 @@ If the hosts did not load after sourcing, try running the script directly:
 `#T` is the terminal title and is set by the zsh and vim plugins, without it
 those other plugins **will not display their titles**.
 
+#### Status Window Renaming
+
 Additionally, if `$tmux_set_window_status` is set, the window status tabs
 will also be updated to include the terminal title, by default the window status
-is set to '#I:#W#F', you can also ignore this setting and just do it manually:
+is set to '#I:#W#F', equivalent to
 
 ```shell
-tmux set-window-option -g window-status-current-format "#I:#T"
-tmux set-window-option -g window-status-format "#I:#T"
+tmux set-window-option -g window-status-current-format "#I:#W#F"
+tmux set-window-option -g window-status-format "#I:##W#F"
 ```
-
-This option also affects ZSH, which will rename the windows with a shortened
-PATH.
-
-Note, after altering any of these settings, run `tmux source ~/.tmux.conf` to
-implement the changes.
+If `tmux_set_window_status` is true, then the window-name will be automatically
+updated by ZSH and Vim/NVIM (provided the plugin is also installed there),
+making the window status title more useful. **Note though** that this will make
+`tmux rename-window` not work if ZSH or Vim/NVIM are running, as they will
+continually change the window title.
 
 ### ZSH title configuration
 
@@ -179,6 +183,10 @@ the title, if the path is longer than this, only the last n characters of the
 path will be shown. Note, this uses named paths, so HOME is replaced with `~`
 and any hashed directories are replaced with their name, e.g. with
 [cdbk](https://github.com/MikeDacre/cdbk).
+
+If `tmux_set_window_status` is true, then the window-name will be automatically
+updated with a shortened version of the zsh_title_fmt, where `path_width` is
+replaced by `win_path_width`, which defaults to 25.
 
 ### Vim/NVIM title configuration
 
@@ -205,3 +213,12 @@ set as `v:` to keep it out of the way:
 Note, you can chose not to install the vim plugin, in which case either you will
 end up with `vim:<path>` in the title, or another title produced internally by
 vim, depending on your settings.
+
+If `tmux_set_window_status` is true, then the window-name will be automatically
+changed also, and for the window running vim the current-window-status-format
+will be updated to use the terminal title instead of window name, which allows
+more vim sugar in the title. One side-effect of this is that if you have
+multiple panes running with vim in some of them and non-ZSH shells (or ZSH
+without this plugin installed) in the others, then the
+current-window-status-format will not be updated on leaving vim, which could
+give the other panes a long title.
