@@ -108,10 +108,14 @@ These variations are controlled by the following optional variables:
 - `tmux_title_format_ssh='#h:#S:#T'`
 - `tmux_win_current_fmt='#I:#T'`
 - `tmux_win_other_fmt='#I:#T'`
+- `zsh_title_hosts='{}'`
 
 The format strings that start with a `#` are tmux specific and can be found in
 the tmux man page. `#S` is the session name, `#I` is the window number, `#h` is
-the short hostname.
+the short hostname, it is modified by `zsh_title_hosts`. This variable holds a
+JSON dictionary as a string and has hostname replacements, e.g.
+`'{"fraser-server": "lab"}'`. This will convert the hostname fraser-server to
+lab to shorten the title.
 
 `#T` is the terminal title and is set by the zsh and vim plugins, without it
 those other plugins **will not display their titles**.
