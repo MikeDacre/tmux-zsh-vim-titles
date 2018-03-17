@@ -2,6 +2,8 @@
 # Set the ZSH component of the title string
 # This component is *heavily* inspired by https://github.com/jreese/zsh-titles
 
+CURRENT_DIR="$(dirname $0:A)"
+
 # Get formats
 [ -n "$zsh_title_fmt" ]  || zsh_title_fmt='${cmd}:${pth}'
 [ -n "$pth_width" ]      || pth_width=60
@@ -27,6 +29,12 @@ function update_title() {
         TITLE=$(eval echo "${zsh_title_fmt}")
     else
         TITLE=${pth}
+    fi
+    # If we are not on tmux, add hostname to TITLE string
+    if [ ! -n "$TMUX" ]; then
+        if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+            TITLE="$("${CURRENT_DIR}/scripts/get_hoststring.py"):${TITLE}"
+        fi
     fi
     # Terminal title
     if [[ -n "$TMUX" ]]; then
