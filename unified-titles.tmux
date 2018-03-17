@@ -20,7 +20,8 @@ main() {
     else
         tmux_string="${tmux_title_start}"
     fi
-    if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+    # Detect if we are in an SSH session
+    if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
         tmux_string="${tmux_string}$(${CURRENT_DIR}/scripts/get_hoststring.py)"
     else
         tmux_string="${tmux_string}${tmux_title_format}"

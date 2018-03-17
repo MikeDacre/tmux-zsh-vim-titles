@@ -7,7 +7,7 @@ set notitle
 
 " Get Variables
 let vim_title_prefix = system('[ -n "$vim_title_prefix" ] || vim_title_prefix="v:"; echo -n "${vim_title_prefix}" | tr -d "[:space:]"')
-let hastmux = system('[ -z "$TMUX" ] && echo -n false || echo -n true | tr -d "[:space:]"')
+let hastmux = system('[ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && echo -n true || echo -n false | tr -d "[:space:]"')
 let override = system('[ -z "$vim_force_tmux_title_change" ] && echo -n false || echo -n true | tr -d "[:space:]"')
 let window_update = system('[ -z "$tmux_set_window_status" ] && echo -n false || echo -n true | tr -d "[:space:]"')
 if window_update == 'true'
