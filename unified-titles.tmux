@@ -21,7 +21,7 @@ main() {
         tmux_string="${tmux_title_start}"
     fi
     if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
-        tmux_string="${tmux_string}$("${CURRENT_DIR}/scripts/get_hoststring.py")"
+        tmux_string="${tmux_string}$(${CURRENT_DIR}/scripts/get_hoststring.py)"
     else
         tmux_string="${tmux_string}${tmux_title_format}"
     fi

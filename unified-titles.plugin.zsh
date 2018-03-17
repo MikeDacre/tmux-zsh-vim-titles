@@ -33,7 +33,7 @@ function update_title() {
     # If we are not on tmux, add hostname to TITLE string
     if [ ! -n "$TMUX" ]; then
         if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
-            TITLE="$("${CURRENT_DIR}/scripts/get_hoststring.py"):${TITLE}"
+            TITLE="$(${CURRENT_DIR}/scripts/get_hoststring.py --host-only):${TITLE}"
         fi
     fi
     # Terminal title

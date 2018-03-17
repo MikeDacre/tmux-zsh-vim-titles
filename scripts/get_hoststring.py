@@ -67,29 +67,36 @@ def run(cmd, shell=False, check=False, get='all'):
     return code
 
 
-def main():
-    """Get hostname."""
+def get_hostname():
+    """Get the hostname itself."""
     host_var = 'zsh_title_hosts'
+    s = os.environ.get(host_var) if host_var in os.environ else '{}'
+    s = s.replace("'", '"')
+
+    try:
+        host_dict = json.loads(s)
+    except ValueError as err:
+        sys.stderr.write(
+            'Failed to parse {0} with the error:\n{1}\nNo hosts loaded\n'
+            .format(host_var, str(err))
+        )
+        host_dict = {}
+
+    host = os.environ.get('HOSTNAME').split('.')[0]
+    host = host if host else run('uname -n', get='stdout')
+    host = host.strip()
+    host = host_dict[host] if host in host_dict else host
+    return host.strip()
+
+
+def main():
+    """Get host string for title."""
     host_str_var = 'tmux_title_format_ssh'
+    if len(sys.argv) > 1 and '--host-only' in sys.argv:
+        return get_hostname()
     h = os.environ.get(host_str_var) if host_str_var in os.environ else '#h:#S:#T'
     if '#h' in h:
-        s = os.environ.get(host_var) if host_var in os.environ else '{}'
-        s = s.replace("'", '"')
-
-        try:
-            host_dict = json.loads(s)
-        except ValueError as err:
-            sys.stderr.write(
-                'Failed to parse {0} with the error:\n{1}\nNo hosts loaded\n'
-                .format(host_var, str(err))
-            )
-            host_dict = {}
-
-        host = os.environ.get('HOSTNAME').split('.')[0]
-        host = host if host else run('uname -n', get='stdout')
-        host = host.strip()
-        host = host_dict[host] if host in host_dict else host
-        host_str = h.replace('#h', host)
+        host_str = h.replace('#h', get_hostname())
     else:
         host_str = h
     return host_str
