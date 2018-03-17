@@ -25,10 +25,13 @@ function update_title() {
     # remove newlines
     cmd=${cmd//$'\n'/}
     pth="%${pth_width}<...<%~"
+    short_pth="%${win_pth_width}<...<%~"
     if [ -n "$cmd" ]; then
         TITLE=$(eval echo "${zsh_title_fmt}")
+        SHORT_TITLE=$(eval echo "${zsh_title_fmt/$'pth'/short_pth}")
     else
         TITLE=${pth}
+        SHORT_TITLE=${short_pth}
     fi
     # If we are not on tmux, add hostname to TITLE string
     if [ ! -n "$TMUX" ]; then
@@ -55,8 +58,7 @@ function update_title() {
         tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
 
         # Window title is short path
-        short_pth="%${win_pth_width}<...<%~"
-        tmux rename-window "${(%)short_pth}"
+        tmux rename-window "${(%)SHORT_TITLE}"
     fi
 }
 
