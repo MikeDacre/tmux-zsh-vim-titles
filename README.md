@@ -148,7 +148,7 @@ those other plugins **will not display their titles**.
 
 #### Status Window Renaming
 
-Additionally, if `$tmux_set_window_status` is set, the window status tabs
+Additionally, if `@tmux_set_window_status` is set, the window status tabs
 will also be updated to include the terminal title, by default the window status
 is set to '#I:#W#F', equivalent to
 
@@ -156,6 +156,13 @@ is set to '#I:#W#F', equivalent to
 tmux set-window-option -g window-status-current-format "#I:#W#F"
 tmux set-window-option -g window-status-format "#I:##W#F"
 ```
+
+To set this, add the following line to your `~/.tmux.conf`:
+
+```shell
+set-option -gq @tmux_set_window_status 'true'
+```
+
 If `tmux_set_window_status` is true, then the window-name will be automatically
 updated by ZSH and Vim/NVIM (provided the plugin is also installed there),
 making the window status title more useful. **Note though** that this will make

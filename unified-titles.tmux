@@ -31,6 +31,10 @@ main() {
     tmux set -g set-titles-string "${tmux_string}"
 
     if [ -n "$tmux_set_window_status" ]; then
+        tmux set-option -gq @tmux_set_window_status 'true'
+    fi
+
+    if [[ $(tmux show-option -gqv @tmux_set_window_status) == 'true' ]]; then
         # Only globally set the widow-current-status-format once, as it is modified
         # by other apps
         update_win=$(tmux show-option -gqv @win-status-set)

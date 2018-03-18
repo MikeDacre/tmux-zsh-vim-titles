@@ -53,6 +53,9 @@ function update_title() {
     fi
     # Tmux Specific Stuff
     if [ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null; then
+        if [ ! -n "$tmux_set_window_status" ]; then
+            export tmux_set_window_status=$(tmux show-option -gqv @tmux_set_window_status)
+        fi
         # Tmux Window Title
         if [ -n "$tmux_set_window_status" ]; then
             # Only set the current window format globally once, as it is overriden elsewhere
