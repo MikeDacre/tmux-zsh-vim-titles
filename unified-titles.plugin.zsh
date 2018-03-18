@@ -35,7 +35,7 @@ function update_title() {
     fi
     # If we are not on tmux, add hostname to TITLE string
     if [ ! -n "$TMUX" ]; then
-        if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+        if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
             TITLE="$(${CURRENT_DIR}/scripts/get_hoststring.py --host-only):${TITLE}"
         fi
     fi
@@ -51,14 +51,27 @@ function update_title() {
     elif [[ "$TERM" =~ ^rxvt-unicode.* ]]; then
         printf '\33]2;%s\007' ${(%)TITLE}
     fi
-    # Tmux Window Title
-    if [ -n "$tmux_set_window_status" ] && [ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null; then
-        # Only set the current window format globally once, as it is overriden elsewhere
-        tmux set-window-option window-status-current-format "${tmux_win_current_fmt}"
-        tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
+    # Tmux Specific Stuff
+    if [ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null; then
+        # Tmux Window Title
+        if [ -n "$tmux_set_window_status" ]; then
+            # Only set the current window format globally once, as it is overriden elsewhere
+            tmux set-window-option window-status-current-format "${tmux_win_current_fmt}"
+            tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
 
-        # Window title is short path
-        tmux rename-window "${(%)SHORT_TITLE}"
+            # Window title is short path
+            tmux rename-window "${(%)SHORT_TITLE}"
+        fi
+
+        # If ssh session has changed, rerun tmux plugin if installed
+        if [ -f "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ]; then
+            if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
+                if [[ ! $(tmux show-option -gqv @ssh-session-info) == "$SSH_CONNECTION" ]]; then
+                    $HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux
+                fi
+            fi
+        fi
+
     fi
 }
 
