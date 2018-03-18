@@ -23,8 +23,10 @@ main() {
     # Detect if we are in an SSH session
     if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
         tmux_string="${tmux_string}$(${CURRENT_DIR}/scripts/get_hoststring.py)"
+        tmux set-option -gq @ssh-session-info "${SSH_CONNECTION}"
     else
         tmux_string="${tmux_string}${tmux_title_format}"
+        tmux set-option -gq @ssh-session-info ""
     fi
     tmux set -g set-titles-string "${tmux_string}"
 
