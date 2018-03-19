@@ -12,11 +12,12 @@ endif
 if !exists("g:vim_force_tmux_title_change")
   let g:vim_force_tmux_title_change = system('[ -n "$vim_force_tmux_title_change" ] && $tmux_force_tmux_title_change && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
 endif
-if !exists("g:vim_set_window_status")
-  let g:vim_set_window_status = system('[ -n "$tmux_set_window_status" ] && $tmux_set_window_status && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
+if !exists("g:tmux_set_window_status")
+  let g:tmux_set_window_status = system('[ -n "$tmux_set_window_status" ] && $tmux_set_window_status && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
 endif
 if !exists("g:vim_include_path")
   let g:vim_include_path = system('[ -n "$vim_include_path" ] && $vim_include_path && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
+endif
 let hastmux = system('[ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
 
 " Get window format and update to terminal title if window status update
@@ -28,7 +29,7 @@ if g:tmux_set_window_status
 endif
 
 " Set tmux control chars
-if hastmux
+if !hastmux
   if &term == "screen" || &term == "screen-256color"
     set t_ts=]0;
     set t_fs=
