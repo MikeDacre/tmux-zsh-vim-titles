@@ -98,6 +98,13 @@ with a variety of shell variables. For example you could change the tmux prompt,
 disable setting the window tab names, or change the delimiter from `:` to
 something else.
 
+For ZSH or Vim, options can be set directly in your shell config, however, tmux
+runs scripts in an isolated subshell, so for tmux all options must be stored in
+either `~/.profile`, `~/.tmux/profile.sh`, or a file defined by `@tmux_profile`
+in tmux (e.g. add `set -gq @tmux_profile ~/.my-zsh/tmux.sh` to your
+`~/.tmux.conf`. For that reason is makes sense to put your configurations into
+one of those files and simply source that file from bash and zsh.
+
 If you want to update your status bar window tabs with a mini version of the
 title text, set `$tmux_set_window_status` in the shell that you call tmux from:
 
@@ -148,7 +155,7 @@ those other plugins **will not display their titles**.
 
 #### Status Window Renaming
 
-Additionally, if `$tmux_set_window_status` is set, the window status tabs
+Additionally, if `@tmux_set_window_status` is set, the window status tabs
 will also be updated to include the terminal title, by default the window status
 is set to '#I:#W#F', equivalent to
 
@@ -156,6 +163,13 @@ is set to '#I:#W#F', equivalent to
 tmux set-window-option -g window-status-current-format "#I:#W#F"
 tmux set-window-option -g window-status-format "#I:##W#F"
 ```
+
+To set this, add the following line to your `~/.tmux.conf`:
+
+```shell
+set-option -gq @tmux_set_window_status 'true'
+```
+
 If `tmux_set_window_status` is true, then the window-name will be automatically
 updated by ZSH and Vim/NVIM (provided the plugin is also installed there),
 making the window status title more useful. **Note though** that this will make

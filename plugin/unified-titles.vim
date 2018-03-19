@@ -55,7 +55,7 @@ if window_update == 'true' || override == 'true'
 
   " Reset the window name to how it was before
   function! ResetTmuxWindowTitle(titleFormat)
-    call SetTmuxWindowTitle("", a:titleFormat)
+    call SetTmuxWindowTitleFormat("", a:titleFormat)
     call system("tmux automatic-rename on")
   endfunction
 
