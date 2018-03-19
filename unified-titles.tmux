@@ -26,6 +26,20 @@ fi
 tmux set -g set-titles on
 
 main() {
+
+    if [[ "${USER}" == 'root' ]]; then
+        tmux_start_str="${tmux_title_root}"
+    else
+        tmux_start_str="${tmux_title_start}"
+    fi
+
+    tmux_string="${tmux_start_str}${tmux_title_format}"
+    tmux_host_string="${tmux_start_str}$("$CURRENT_DIR/scripts/get_hoststring.py" | tr -d '[:space:]')"
+
+    # Set the title string in tmux
+    tmux set -g @title-string "${tmux_string}"
+    tmux set -g @title-host-string "${tmux_host_string}"
+
     # Actually set the titles
     # shellcheck source=scritps/set_tmux_title.sh
     . $CURRENT_DIR/scripts/set_tmux_title.sh

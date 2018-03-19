@@ -53,12 +53,10 @@ function update_title() {
 
     # If we are not on tmux, add hostname to TITLE string
     if ! $in_tmux; then
-        if ; then
-            local hoststr
-            hoststr="$($CURRENT_DIR/scripts/get_hoststring.py --host-only)"
-            if [[ ! $TITLE =~ $hoststr ]]; then
-                TITLE="${hoststr}:${TITLE}"
-            fi
+        local hoststr
+        hoststr="$($CURRENT_DIR/scripts/get_hoststring.py --host-only)"
+        if [[ ! $TITLE =~ $hoststr ]]; then
+            TITLE="${hoststr}:${TITLE}"
         fi
     fi
 
@@ -76,7 +74,7 @@ function update_title() {
     if $in_tmux; then
         # Reset tmux portion of the title if plugin is installed
         # Run as source to preserve current environment
-        if [ -f "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ] && $in_ssh; then
+        if [ -f "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ]; then
             # shellcheck source=scripts/set_tmux_title.sh
             . $CURRENT_DIR/scripts/set_tmux_title.sh
         fi
