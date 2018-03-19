@@ -98,6 +98,13 @@ with a variety of shell variables. For example you could change the tmux prompt,
 disable setting the window tab names, or change the delimiter from `:` to
 something else.
 
+For ZSH or Vim, options can be set directly in your shell config, however, tmux
+runs scripts in an isolated subshell, so for tmux all options must be stored in
+either `~/.profile`, `~/.tmux/profile.sh`, or a file defined by `@tmux_profile`
+in tmux (e.g. add `set -gq @tmux_profile ~/.my-zsh/tmux.sh` to your
+`~/.tmux.conf`. For that reason is makes sense to put your configurations into
+one of those files and simply source that file from bash and zsh.
+
 If you want to update your status bar window tabs with a mini version of the
 title text, set `$tmux_set_window_status` in the shell that you call tmux from:
 
