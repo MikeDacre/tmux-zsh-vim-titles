@@ -8,9 +8,6 @@ CURRENT_DIR="$(dirname $0:A)"
 if [ -f "$HOME/.tmux/profile.sh" ]; then
     source "$HOME/.tmux/profile.sh" 2>/dev/null >/dev/null
 fi
-if [ -f "$HOME/.profile" ]; then
-    source "$HOME/.profile" 2>/dev/null >/dev/null
-fi
 TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tr -d "[:space:]")
 if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
@@ -20,13 +17,8 @@ fi
 [ -n "$zsh_title_fmt" ]  || zsh_title_fmt='${cmd}:${pth}'
 [ -n "$pth_width" ]      || pth_width=60
 [ -n "$win_pth_width" ]  || win_pth_width=25
-
-if [ -n "$tmux_set_window_status" ] && [ -n "$TMUX" ]; then
-    [ -n "$tmux_win_current_fmt" ] || tmux_win_current_fmt='#I:#W#F'
-    [ -n "$tmux_win_other_fmt" ]   || tmux_win_other_fmt='#I:#W#F'
-    tmux set-window-option -g window-status-current-format "${tmux_win_current_fmt}"
-    tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
-fi
+[ -n "$tmux_win_current_fmt" ] || tmux_win_current_fmt='#I:#W#F'
+[ -n "$tmux_win_other_fmt" ]   || tmux_win_other_fmt='#I:#W#F'
 
 # Set titles
 function update_title() {
@@ -38,6 +30,8 @@ function update_title() {
     cmd=${cmd//$'\n'/}
     pth="%${pth_width}<...<%~"
     short_pth="%${win_pth_width}<...<%~"
+
+    # Set core titles
     if [ -n "$cmd" ]; then
         TITLE=$(eval echo "${zsh_title_fmt}")
         SHORT_TITLE=$(eval echo "${zsh_title_fmt/$'pth'/short_pth}")
@@ -45,18 +39,34 @@ function update_title() {
         TITLE=${pth}
         SHORT_TITLE=${short_pth}
     fi
+
+    # Get tmux and ssh status
+    local in_ssh
+    local in_tmux
+    if [ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null; then
+        in_tmux=true
+    else
+        in_tmux=false
+    fi
+    if [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
+        in_ssh=true
+    else
+        in_ssh=false
+    fi
+
     # If we are not on tmux, add hostname to TITLE string
-    if [ ! -n "$TMUX" ]; then
-        # Force source the tmux plugin if it hasn't been sourced?
-        if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
-            TITLE="$(${CURRENT_DIR}/scripts/get_hoststring.py --host-only):${TITLE}"
+    if ! $in_tmux; then
+        if ; then
+            local hoststr
+            hoststr="$($CURRENT_DIR/scripts/get_hoststring.py --host-only)"
+            if [[ ! $TITLE =~ $hoststr ]]; then
+                TITLE="${hoststr}:${TITLE}"
+            fi
         fi
     fi
-    # Terminal title
-    if [[ -n "$TMUX" ]]; then
-        print -Pn "\ek${(%)TITLE}\e\\"
-        print -Pn "\e]0;${(%)TITLE}\a"
-    elif [[ "$TERM" =~ screen* ]]; then
+
+    # Terminal title (work even if ssh from tmux)
+    if [ -n "$TMUX" ] || [[ "$TERM" =~ screen* ]]; then
         print -Pn "\ek${(%)TITLE}\e\\"
         print -Pn "\e]0;${(%)TITLE}\a"
     elif [[ "$TERM" =~ xterm* ]]; then
@@ -64,8 +74,9 @@ function update_title() {
     elif [[ "$TERM" =~ ^rxvt-unicode.* ]]; then
         printf '\33]2;%s\007' ${(%)TITLE}
     fi
+
     # Tmux Specific Stuff
-    if [ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null; then
+    if $in_tmux; then
         if [ ! -n "$tmux_set_window_status" ]; then
             export tmux_set_window_status=$(tmux show-option -gqv @tmux_set_window_status | tr -d "[:space:]")
         fi
@@ -81,12 +92,10 @@ function update_title() {
         fi
 
         # If ssh session has changed, rerun tmux plugin if installed
-        if [ -f "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ]; then
-            if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
-                if [[ ! $(tmux show-option -gqv @ssh-session-info) == "$SSH_CONNECTION" ]]; then
-                    tmux set -gq @ssh-session-info "$SSH_CONNECTION"
-                    $HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux
-                fi
+        if [ -f "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ] && $in_ssh; then
+            if [[ ! $(tmux show-option -gqv @ssh-session-info) == "$SSH_CONNECTION" ]]; then
+                tmux set -gq @ssh-session-info "$SSH_CONNECTION"
+                bash $HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux
             fi
         fi
 
@@ -107,10 +116,13 @@ function _zsh_title__preexec() {
         %*)	cmd="${(z)jobtexts[${(Q)cmd[1]:-%+}]}" ;;
     esac
 
-    cmd=${cmd[1]}
+    cmd="${cmd[1]}"
 
     # Escape '\'
-    cmd=${cmd//\\/\\\\\\\\}
+    cmd="${cmd//\\/\\\\\\\\}"
+
+	# Strip start and end whitespace
+    cmd=$(echo "${cmd}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
     update_title "${cmd}"
 }
