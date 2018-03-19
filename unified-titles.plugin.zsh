@@ -11,7 +11,7 @@ fi
 if [ -f "$HOME/.profile" ]; then
     source "$HOME/.profile" 2>/dev/null >/dev/null
 fi
-TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tq -d "[:space:]")
+TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tr -d "[:space:]")
 if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi
