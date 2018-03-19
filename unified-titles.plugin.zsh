@@ -37,32 +37,9 @@ function update_title() {
         SHORT_TITLE=${short_pth}
     fi
 
-    # Get tmux and ssh status
-    local in_ssh
-    local in_tmux
-    if [ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null; then
-        in_tmux=true
-    else
-        in_tmux=false
-    fi
-    if [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
-        in_ssh=true
-    else
-        in_ssh=false
-    fi
-
-    # If we are not on tmux, add hostname to TITLE string
-    if ! $in_tmux; then
-        local hoststr
-        hoststr="$($CURRENT_DIR/scripts/get_hoststring.py --host-only)"
-        if [[ ! $TITLE =~ $hoststr ]]; then
-            TITLE="${hoststr}:${TITLE}"
-        fi
-    fi
-
     # Terminal title (work even if ssh from tmux)
     if [ -n "$TMUX" ] || [[ "$TERM" =~ screen* ]]; then
-        print -Pn "\ek${(%)TITLE}\e\\"
+        # print -Pn "\ek${(%)TITLE}\e\\"  # Sets window name
         print -Pn "\e]0;${(%)TITLE}\a"
     elif [[ "$TERM" =~ xterm* ]]; then
         print -Pn "\e]0;${(%)TITLE}\a"
@@ -79,17 +56,14 @@ function update_title() {
             . $CURRENT_DIR/scripts/set_tmux_title.sh
         fi
 
-        if [ -z "$tmux_set_window_status" ]; then
-            export tmux_set_window_status=$(tmux show-option -gqv @tmux_set_window_status | tr -d "[:space:]")
-        fi
-
         # Tmux Window Title
         if [ -n "$tmux_set_window_status" ]; then
             # Only set the current window format globally once, as it is overriden elsewhere
             tmux set-window-option window-status-current-format "${tmux_win_current_fmt}"
-            tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
+            # tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
 
             # Window title is short path
+            # print -Pn "\ek${(%)SHORT_TITLE}\e\\"  # Sets window name
             tmux rename-window "${(%)SHORT_TITLE}"
         fi
     fi

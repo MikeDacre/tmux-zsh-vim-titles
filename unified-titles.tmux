@@ -22,10 +22,9 @@ if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi
 
-# Turn tmux titles on
-tmux set -g set-titles on
-
 main() {
+    # Turn tmux titles on
+    tmux set -g set-titles on
 
     if [[ "${USER}" == 'root' ]]; then
         tmux_start_str="${tmux_title_root}"
@@ -44,18 +43,34 @@ main() {
     # shellcheck source=scritps/set_tmux_title.sh
     . $CURRENT_DIR/scripts/set_tmux_title.sh
 
-    if [ -n "$tmux_set_window_status" ]; then
-        tmux set-option -gq @tmux_set_window_status 'true'
+    # Preferentially get window status from tmux variable
+    local tmux_internal_win_status
+    tmux_internal_win_status=$(tmux show-option -gqv @tmux_set_window_status | tr -d "[:space:]")
+    if [ -n "$tmux_internal_win_status" ]; then
+        if [[ "$tmux_internal_win_status" == 'true' ]]; then
+            tmux_set_window_status=true
+        else
+            tmux_set_window_status=false
+        fi
+    else
+        if [ -n "$tmux_set_window_status" ] && "$tmux_set_window_status"; then
+            tmux_set_window_status=true
+            tmux set-option -gq @tmux_set_window_status true
+        else
+            tmux_set_window_status=false
+            tmux set-option -gq @tmux_set_window_status false
+        fi
     fi
 
-    if [[ $(tmux show-option -gqv @tmux_set_window_status | tr -d "[:space:]") == 'true' ]]; then
+    if $tmux_set_window_status; then
         # Only globally set the widow-current-status-format once, as it is modified
         # by other apps
-        update_win=$(tmux show-option -gqv @win-status-set | tr -d "[:space:]")
+        update_win=$(tmux show-option -gqv @win-status-set)
         if [[ "$update_win" != 'true' ]]; then
             tmux set-window-option -g window-status-current-format "${tmux_win_current_fmt}"
             tmux set-option -gq @win-status-set 'true'
         fi
+        # Update the other format periodically
         tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
     fi
 }
