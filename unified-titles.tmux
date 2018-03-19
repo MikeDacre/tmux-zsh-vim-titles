@@ -50,7 +50,6 @@ main() {
     fi
 
     tmux set -g set-titles-string "$tmux_string"
-    tmux set -g set-titles
 
     if [[ $(tmux show-option -gqv @tmux_set_window_status | tr -d "[:space:]") == 'true' ]]; then
         # Only globally set the widow-current-status-format once, as it is modified
