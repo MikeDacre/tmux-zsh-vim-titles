@@ -4,6 +4,18 @@
 
 CURRENT_DIR="$(dirname $0:A)"
 
+# Source applicable profiles
+if [ -f "$HOME/.tmux/profile.sh" ]; then
+    source "$HOME/.tmux/profile.sh" 2>/dev/null >/dev/null
+fi
+if [ -f "$HOME/.profile" ]; then
+    source "$HOME/.profile" 2>/dev/null >/dev/null
+fi
+TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tq -d "[:space:]")
+if [ -f "$TMUX_CONF" ]; then
+    source "$TMUX_CONF" 2>/dev/null >/dev/null
+fi
+
 # Get formats
 [ -n "$zsh_title_fmt" ]  || zsh_title_fmt='${cmd}:${pth}'
 [ -n "$pth_width" ]      || pth_width=60
@@ -35,6 +47,7 @@ function update_title() {
     fi
     # If we are not on tmux, add hostname to TITLE string
     if [ ! -n "$TMUX" ]; then
+        # Force source the tmux plugin if it hasn't been sourced?
         if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
             TITLE="$(${CURRENT_DIR}/scripts/get_hoststring.py --host-only):${TITLE}"
         fi
@@ -53,6 +66,10 @@ function update_title() {
     fi
     # Tmux Specific Stuff
     if [ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null; then
+        if [ ! -n "$tmux_set_window_status" ]; then
+            export tmux_set_window_status=$(tmux show-option -gqv @tmux_set_window_status | tr -d "[:space:]")
+        fi
+
         # Tmux Window Title
         if [ -n "$tmux_set_window_status" ]; then
             # Only set the current window format globally once, as it is overriden elsewhere
@@ -67,6 +84,7 @@ function update_title() {
         if [ -f "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ]; then
             if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
                 if [[ ! $(tmux show-option -gqv @ssh-session-info) == "$SSH_CONNECTION" ]]; then
+                    tmux set -gq @ssh-session-info "$SSH_CONNECTION"
                     $HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux
                 fi
             fi

@@ -2,6 +2,22 @@
 
 CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# Attempt to get all applicable profiles
+if [ -f "$HOME/.bashrc" ]; then
+    source "$HOME/.bashrc" 2>/dev/null >/dev/null
+fi
+if [ -f "$HOME/.profile" ]; then
+    source "$HOME/.profile" 2>/dev/null >/dev/null
+fi
+if [ -f "$HOME/.tmux/profile" ]; then
+    source "$HOME/.tmux/profile" 2>/dev/null >/dev/null
+fi
+
+TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tq -d "[:space:]")
+if [ -f "$TMUX_CONF" ]; then
+    source "$TMUX_CONF" 2>/dev/null >/dev/null
+fi
+
 # Try to correctly set titles
 tmux set -g set-titles on
 
@@ -28,12 +44,18 @@ main() {
         tmux_string="${tmux_string}${tmux_title_format}"
         tmux set-option -gq @ssh-session-info ""
     fi
-    tmux set -g set-titles-string "${tmux_string}"
 
     if [ -n "$tmux_set_window_status" ]; then
+        tmux set-option -gq @tmux_set_window_status 'true'
+    fi
+
+    tmux set -g set-titles-string "$tmux_string"
+    tmux set -g set-titles
+
+    if [[ $(tmux show-option -gqv @tmux_set_window_status | tr -d "[:space:]") == 'true' ]]; then
         # Only globally set the widow-current-status-format once, as it is modified
         # by other apps
-        update_win=$(tmux show-option -gqv @win-status-set)
+        update_win=$(tmux show-option -gqv @win-status-set | tr -d "[:space:]")
         if [[ "$update_win" != 'true' ]]; then
             tmux set-window-option -g window-status-current-format "${tmux_win_current_fmt}"
             tmux set-option -gq @win-status-set 'true'
