@@ -16,7 +16,7 @@ if !exists("g:tmux_set_window_status")
   let g:tmux_set_window_status = system('[ -n "$tmux_set_window_status" ] && $tmux_set_window_status && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
 endif
 if !exists("g:vim_include_path")
-  let g:vim_include_path = system('[ -n "$vim_include_path" ] && $vim_include_path && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
+  let g:vim_include_path = system('if [ -n "$vim_include_path" ]; then if [[ $vim_include_path == "long" ]]; then echo -n long; elif [[ $vim_include_path == "true" ]]; then echo -n 1; else echo -n 0; fi; else echo -n 0; fi | tr -d "[:space:]"')
 endif
 let hastmux = system('[ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
 
@@ -101,7 +101,7 @@ endif
 " Actually set the terminal title
 if g:vim_include_path == 'long'
   set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:p:t\")}%)%(\ %M%)
-elseif g:vim_include_path
+elseif g:vim_include_path == '1'
   set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:.:p:t\")}%)%(\ %M%)
 else
   set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)

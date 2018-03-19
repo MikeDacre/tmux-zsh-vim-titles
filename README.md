@@ -254,7 +254,7 @@ vim, depending on your settings.
 Finally, if you want to add the path to the terminal and window title also, you
 can do so with `vim_include_path`, if this variable equates to `long`, the whole
 path will be included, which can make your titles very large, if it is just
-`true`, then the directory immediately above the file is included. To set,
+`true`, then any directories between you and the file are included. To set,
 either edit the config file to include `export vim_include_path='long'` or add
 the following line to your `~/.vimrc`:
 
