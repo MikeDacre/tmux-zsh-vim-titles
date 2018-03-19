@@ -101,7 +101,7 @@ endif
 " Actually set the terminal title
 if g:vim_include_path == 'long'
   set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:p:t\")}%)%(\ %M%)
-elseif g:vim_include_path == '1'
+elseif g:vim_include_path == 1 || g:vim_include_path == '1'
   set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:.:p:t\")}%)%(\ %M%)
 else
   set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)
