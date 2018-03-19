@@ -17,6 +17,12 @@ if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi
 
+if [ ! -n "$TMUX" ]; then
+    if [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
+        TITLE_PRE="$($CURRENT_DIR/scripts/get_hoststring.py --host-only)"
+    fi
+fi
+
 # Set titles
 function update_title() {
     local cmd
@@ -36,6 +42,7 @@ function update_title() {
         TITLE=${pth}
         SHORT_TITLE=${short_pth}
     fi
+    TITLE="${TITLE_PRE}:${TITLE}"
 
     # Terminal title (work even if ssh from tmux)
     if [ -n "$TMUX" ] || [[ "$TERM" =~ screen* ]]; then
