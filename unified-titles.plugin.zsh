@@ -4,6 +4,10 @@
 
 CURRENT_DIR="$(dirname $0:A)"
 
+# Get default starting strings
+# shellcheck source=defaults.sh
+. $CURRENT_DIR/defaults.sh
+
 # Source applicable profiles
 if [ -f "$HOME/.tmux/profile.sh" ]; then
     source "$HOME/.tmux/profile.sh" 2>/dev/null >/dev/null
@@ -12,13 +16,6 @@ TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tr -d "[:space:]")
 if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi
-
-# Get formats
-[ -n "$zsh_title_fmt" ]  || zsh_title_fmt='${cmd}:${pth}'
-[ -n "$pth_width" ]      || pth_width=60
-[ -n "$win_pth_width" ]  || win_pth_width=25
-[ -n "$tmux_win_current_fmt" ] || tmux_win_current_fmt='#I:#W#F'
-[ -n "$tmux_win_other_fmt" ]   || tmux_win_other_fmt='#I:#W#F'
 
 # Set titles
 function update_title() {
@@ -77,7 +74,14 @@ function update_title() {
 
     # Tmux Specific Stuff
     if $in_tmux; then
-        if [ ! -n "$tmux_set_window_status" ]; then
+        # Reset tmux portion of the title if plugin is installed
+        # Run as source to preserve current environment
+        if [ -f "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ] && $in_ssh; then
+            # shellcheck source=scripts/set_tmux_title.sh
+            . $CURRENT_DIR/scripts/set_tmux_title.sh
+        fi
+
+        if [ -z "$tmux_set_window_status" ]; then
             export tmux_set_window_status=$(tmux show-option -gqv @tmux_set_window_status | tr -d "[:space:]")
         fi
 
@@ -90,15 +94,6 @@ function update_title() {
             # Window title is short path
             tmux rename-window "${(%)SHORT_TITLE}"
         fi
-
-        # If ssh session has changed, rerun tmux plugin if installed
-        if [ -f "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ] && $in_ssh; then
-            if [[ ! $(tmux show-option -gqv @ssh-session-info) == "$SSH_CONNECTION" ]]; then
-                tmux set -gq @ssh-session-info "$SSH_CONNECTION"
-                bash $HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux
-            fi
-        fi
-
     fi
 }
 
