@@ -3,21 +3,23 @@
 CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Get default starting strings
-# shellcheck source=scritps/set_tmux_title.sh
+# shellcheck source=defaults.sh
 . $CURRENT_DIR/defaults.sh
 
-# Attempt to get all applicable profiles
+# Attempt to get all applicable profiles as tmux runs this code
+# with no environment
 if [ -f "$HOME/.bashrc" ]; then
     source "$HOME/.bashrc" 2>/dev/null >/dev/null
 fi
 if [ -f "$HOME/.profile" ]; then
     source "$HOME/.profile" 2>/dev/null >/dev/null
 fi
-if [ -f "$HOME/.tmux/profile" ]; then
-    source "$HOME/.tmux/profile" 2>/dev/null >/dev/null
-fi
 
 TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tr -d "[:space:]")
+if [ -z "$TMUX_CONF" ]; then
+    TMUX_CONF="$HOME/.tmux/profile.sh"
+    tmux set -gq @tmux_conf "$TMUX_CONF"
+fi
 if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi
@@ -39,29 +41,11 @@ main() {
     tmux set -g @title-string "${tmux_string}"
     tmux set -g @title-host-string "${tmux_host_string}"
 
-    # Actually set the titles
+    # Actually set the titles, also run by ZSH
     # shellcheck source=scritps/set_tmux_title.sh
     . $CURRENT_DIR/scripts/set_tmux_title.sh
 
-    # Preferentially get window status from tmux variable
-    local tmux_internal_win_status
-    tmux_internal_win_status=$(tmux show-option -gqv @tmux_set_window_status | tr -d "[:space:]")
-    if [ -n "$tmux_internal_win_status" ]; then
-        if [[ "$tmux_internal_win_status" == 'true' ]]; then
-            tmux_set_window_status=true
-        else
-            tmux_set_window_status=false
-        fi
-    else
-        if [ -n "$tmux_set_window_status" ] && "$tmux_set_window_status"; then
-            tmux_set_window_status=true
-            tmux set-option -gq @tmux_set_window_status true
-        else
-            tmux_set_window_status=false
-            tmux set-option -gq @tmux_set_window_status false
-        fi
-    fi
-
+    # Update window name if requested
     if $tmux_set_window_status; then
         # Only globally set the widow-current-status-format once, as it is modified
         # by other apps

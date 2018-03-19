@@ -8,11 +8,9 @@ CURRENT_DIR="$(dirname $0:A)"
 # shellcheck source=defaults.sh
 . $CURRENT_DIR/defaults.sh
 
-# Source applicable profiles
-if [ -f "$HOME/.tmux/profile.sh" ]; then
-    source "$HOME/.tmux/profile.sh" 2>/dev/null >/dev/null
-fi
+# Source tmux profile if available
 TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tr -d "[:space:]")
+[ -n "$TMUX_CONF" ] || TMUX_CONF="$HOME/.tmux/profile.sh"
 if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi

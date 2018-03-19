@@ -23,7 +23,8 @@
 [ -n "$tmux_title_format" ]     || tmux_title_format='#S:#T'
 [ -n "$tmux_title_format_ssh" ] || tmux_title_format_ssh='#h:#S:#T'
 
-# For window names, if tmux_set_window_status is true
+# For window names, if tmux_set_window_status is true, in tmux this is
+# altered such that #W is replaced with #T (terminal title).
 [ -n "$tmux_win_current_fmt" ]  || tmux_win_current_fmt='#F#I:#W'
 [ -n "$tmux_win_other_fmt" ]    || tmux_win_other_fmt='#F#I:#W'
 
@@ -36,3 +37,4 @@
 
 ## Vim
 [ -n "$vim_title_prefix" ] || vim_title_prefix="v:"
+[ -n "$vim_include_path" ] || vim_include_path=false  # Can be true or 'long'
