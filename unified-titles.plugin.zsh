@@ -16,13 +16,14 @@ if [ -f "$TMUX_CONF" ]; then
 fi
 
 # Run the tmux title setting plugin on shell start
+TITLE_PRE=""
 if [ -n "$TMUX" ]; then
     if [ -x "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ]; then
         $HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux
     fi
 else
     if [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
-        TITLE_PRE="$($CURRENT_DIR/scripts/get_hoststring.py --host-only)"
+        TITLE_PRE="$($CURRENT_DIR/scripts/get_hoststring.py --host-only | tr -d "[:space:]"):"
     fi
 fi
 
@@ -45,7 +46,9 @@ function update_title() {
         TITLE=${pth}
         SHORT_TITLE=${short_pth}
     fi
-    TITLE="${TITLE_PRE}:${TITLE}"
+    if [[ ! $TITLE =~ $TITLE_PRE ]]; then
+        TITLE="${TITLE_PRE}${TITLE}"
+    fi
 
     # Terminal title (work even if ssh from tmux)
     if [ -n "$TMUX" ] || [[ "$TERM" =~ screen* ]]; then

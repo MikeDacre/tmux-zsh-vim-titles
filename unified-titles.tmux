@@ -4,7 +4,7 @@ CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Get default starting strings
 # shellcheck source=defaults.sh
-. $CURRENT_DIR/defaults.sh
+. "$CURRENT_DIR/defaults.sh"
 
 # Attempt to get all applicable profiles as tmux runs this code
 # with no environment
@@ -42,8 +42,8 @@ main() {
     tmux set -g @title-host-string "${tmux_host_string}"
 
     # Actually set the titles, also run by ZSH
-    # shellcheck source=scritps/set_tmux_title.sh
-    . $CURRENT_DIR/scripts/set_tmux_title.sh
+    # shellcheck source=scripts/set_tmux_title.sh
+    . "$CURRENT_DIR/scripts/set_tmux_title.sh"
 
     # Update window name if requested
     if $tmux_set_window_status; then
