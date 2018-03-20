@@ -45,8 +45,8 @@ main() {
         tmux_start_str="${tmux_title_start}"
     fi
 
-    tmux_string="${tmux_start_str}${tmux_title_format}"
-    tmux_host_string="${tmux_start_str}$("$CURRENT_DIR/scripts/get_hoststring.py" | tr -d '[:space:]')"
+    tmux_string="#{window_bell_flag,!,}${tmux_start_str}${tmux_title_format}"
+    tmux_host_string="#{window_bell_flag,!,}${tmux_start_str}$("$CURRENT_DIR/scripts/get_hoststring.py" | tr -d '[:space:]')"
 
     # Set the title string in tmux
     tmux set -g @title-string "${tmux_string}"
@@ -75,5 +75,5 @@ main
 
 # Update string on attach and detatch
 tmux set-hook -g after-client-attached "run \"$CURRENT_DIR/unified-titles.tmux\""
-tmux set-hook -g alert-bell "run \"$CURRENT_DIR/scripts/set_tmux_title.sh bell\""
+# tmux set-hook -g alert-bell "run \"$CURRENT_DIR/scripts/set_tmux_title.sh bell\""
 tmux set-hook -g after-client-detached "run \"echo -ne \\\"\e]0;$HOSTNAME\a\\\"\""
