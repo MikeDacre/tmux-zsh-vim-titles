@@ -32,6 +32,7 @@ Install with [tpm](https://github.com/tmux-plugins/tpm) by adding the following
 line to your `.tmux.conf`:
 
 ```
+set -g set-titles on
 set -g @plugin 'MikeDacre/tmux-zsh-vim-titles'
 ```
 
