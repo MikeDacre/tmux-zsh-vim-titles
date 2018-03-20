@@ -52,6 +52,8 @@ main() {
         update_win=$(tmux show-option -gqv @win-status-set)
         if [[ "$update_win" != 'true' ]]; then
             tmux set-window-option -g window-status-current-format "${tmux_win_current_fmt}"
+            tmux set-window-option -g automatic-rename-format "${tmux_win_other_fmt}"
+            tmux set-window-option -g automatic-rename on
             tmux set-option -gq @win-status-set 'true'
         fi
         # Update the other format periodically

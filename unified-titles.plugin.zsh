@@ -70,7 +70,6 @@ function update_title() {
         if [ -n "$tmux_set_window_status" ]; then
             # Only set the current window format globally once, as it is overriden elsewhere
             tmux set-window-option window-status-current-format "${tmux_win_current_fmt}"
-            # tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
 
             # Window title is short path
             # print -Pn "\ek${(%)SHORT_TITLE}\e\\"  # Sets window name
