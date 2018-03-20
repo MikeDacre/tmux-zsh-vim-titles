@@ -6,6 +6,13 @@
 # Turn tmux titles on
 tmux set -g set-titles on
 
+# Is there a bell?
+if [ -n "$1" ] && [[ "$1" == 'bell' ]]; then
+    BELL_STR='!'
+else
+    BELL_STR=''
+fi
+
 main() {
     # Detect if we are in an SSH session, use script to munge tmux_title_format_ssh
 	# if we are, else just use the simple title format
@@ -19,6 +26,6 @@ main() {
     fi
 
 	# Actually set the title
-    tmux set -g set-titles-string "${tmux_string}"
+    tmux set -g set-titles-string "${BELL_STR}${tmux_string}"
 }
 main

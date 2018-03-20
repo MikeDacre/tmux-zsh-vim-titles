@@ -22,6 +22,10 @@ hubble, those would be: `t:hubble:0:~`, `t:hubble:fred:~`, `t:hubble:v:hi.txt`
 instead. If you were the root user on hubble, the starting `t:` would instead be
 `rt:`.
 
+**Note:** A tmux terminal bell results in the title being prefixed with '!'
+until an update event (doing something in vim, pressing return in zsh, waiting
+for status-interval seconds (default 15)).
+
 ![tmux-zsh-vim-titles-demo](./unified-titles-demo.gif)
 
 ## Installation

@@ -24,6 +24,17 @@ if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi
 
+# Add variables to the tmux environment
+variables="tmux_set_window_status"
+variables+=" vim_force_tmux_title_change"
+variables+=" tmux_title_start"
+variables+=" tmux_title_root"
+variables+=" tmux_title_format"
+variables+=" tmux_title_format_ssh"
+variables+=" tmux_win_current_fmt"
+variables+=" tmux_win_other_fmt"
+tmux set -g update-environment "${variables}"
+
 main() {
     # Turn tmux titles on
     tmux set -g set-titles on
@@ -63,5 +74,6 @@ main() {
 main
 
 # Update string on attach and detatch
-tmux set-hook -g after-client-attached "run \'$CURRENT_DIR/unified-titles.tmux\'"
-tmux set-hook -g after-client-detached "run \'echo -ne \"\\e]0;$HOSTNAME\\a\"\'"
+tmux set-hook -g after-client-attached "run \"$CURRENT_DIR/unified-titles.tmux\""
+tmux set-hook -g alert-bell "run \"$CURRENT_DIR/scripts/set_tmux_title.sh bell\""
+tmux set-hook -g after-client-detached "run \"echo -ne \\\"\e]0;$HOSTNAME\a\\\"\""
