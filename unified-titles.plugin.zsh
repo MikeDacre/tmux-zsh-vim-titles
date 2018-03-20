@@ -16,6 +16,7 @@ if $in_tmux; then
     TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tr -d "[:space:]")
 fi
 [ -n "$TMUX_CONF" ] || TMUX_CONF="$HOME/.tmux/profile.sh"
+
 if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi

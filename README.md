@@ -22,6 +22,10 @@ hubble, those would be: `t:hubble:0:~`, `t:hubble:fred:~`, `t:hubble:v:hi.txt`
 instead. If you were the root user on hubble, the starting `t:` would instead be
 `rt:`.
 
+**Note:** A tmux terminal bell results in the title being prefixed with '!'
+until an update event (doing something in vim, pressing return in zsh, waiting
+for status-interval seconds (default 15)).
+
 ![tmux-zsh-vim-titles-demo](./unified-titles-demo.gif)
 
 ## Installation
@@ -32,6 +36,7 @@ Install with [tpm](https://github.com/tmux-plugins/tpm) by adding the following
 line to your `.tmux.conf`:
 
 ```
+set -g set-titles on
 set -g @plugin 'MikeDacre/tmux-zsh-vim-titles'
 ```
 
@@ -99,14 +104,35 @@ disable setting the window tab names, or change the delimiter from `:` to
 something else.
 
 For ZSH or Vim, options can be set directly in your shell config, however, tmux
-runs scripts in an isolated subshell, so for tmux all options must be stored in
-either `~/.profile`, `~/.tmux/profile.sh`, or a file defined by `@tmux_profile`
-in tmux (e.g. add `set -gq @tmux_profile ~/.my-zsh/tmux.sh` to your
-`~/.tmux.conf`. For that reason is makes sense to put your configurations into
-one of those files and simply source that file from bash and zsh.
+runs scripts in an isolated subshell, so these configs (e.g. `~/.zshrc` or
+`~/.bashrc`) are not sourced by default.
 
-If you want to update your status bar window tabs with a mini version of the
-title text, set `$tmux_set_window_status` in the shell that you call tmux from:
+Defaults are set in the `defaults.sh` file in this directory, these are then
+modified by the config at `@tmux_conf`, which defaults to `~/.tmux/profile.sh`.
+Ideally, you should copy `defaults.sh` to that location and alter it to git your
+preferences. To do that, do the following:
+
+```shell
+curl https://raw.githubusercontent.com/MikeDacre/tmux-zsh-vim-titles/master/defaults.sh >> ~/.tmux/profile.sh
+echo "source ~/.tmux/profile.sh >> ~/.zshrc"
+echo "source ~/.tmux/profile.sh >> ~/.bashrc"
+```
+
+If you would like your config to be somewhere else (e.g., your existing
+profile), add the following line to your `~/.tmux.conf`:
+
+```
+set -gq @tmux_conf ~/.bash_profile
+```
+
+*Note*: for the tmux plugin only, the user's `~/.bashrc` and `~/.profile` are
+also sourced, but it doesn't make sense to rely on this.
+
+### Tmux window updating
+
+By default, only the terminal title is set by all parts of this plugin, to also
+set a mini version of the title in the status line window names, set
+`$tmux_set_window_status` to `true` in your config.
 
 ```shell
 export $tmux_set_window_status=true
@@ -155,26 +181,24 @@ those other plugins **will not display their titles**.
 
 #### Status Window Renaming
 
-Additionally, if `@tmux_set_window_status` is set, the window status tabs
-will also be updated to include the terminal title, by default the window status
-is set to '#I:#W#F', equivalent to
+Additionally, if `$tmux_set_window_status` is set to true, the window status
+tabs will also be updated to include the terminal title, by default the window
+status is set to '#F#I:#W', equivalent to
 
 ```shell
-tmux set-window-option -g window-status-current-format "#I:#W#F"
-tmux set-window-option -g window-status-format "#I:##W#F"
+tmux set-window-option -g window-status-current-format "#F#I:#W"
+tmux set-window-option -g window-status-format "#F#I:#W"
 ```
 
-To set this, add the following line to your `~/.tmux.conf`:
+To control these formats if `$tmux_set_window_status` is true, update the
+`$tmux_win_current_fmt` and `$tmux_win_other_fmt` config variables, don't set
+the tmux window options directly, as they will be overwritten.
 
-```shell
-set-option -gq @tmux_set_window_status 'true'
-```
-
-If `tmux_set_window_status` is true, then the window-name will be automatically
-updated by ZSH and Vim/NVIM (provided the plugin is also installed there),
-making the window status title more useful. **Note though** that this will make
-`tmux rename-window` not work if ZSH or Vim/NVIM are running, as they will
-continually change the window title.
+Note that the window-name will be also be automatically updated by ZSH and
+Vim/NVIM (provided the plugin is also installed there), making the window status
+title more useful. **Note though** that this will make `tmux rename-window` not
+work if ZSH or Vim/NVIM are running, as they will continually change the window
+title.
 
 ### ZSH title configuration
 
@@ -214,19 +238,40 @@ change the window title to the appropriate vim title and will issue shell title
 instructions to try to force change the terminal title change. This works in
 almost all cases, but there is a slight visual defect+overhead as the vim buffer
 is redrawn on buffer change. For that reason it is off by default. If your vim
-is not setting the title properly, try adding the following to your `.bashrc`,
-`.zshrc`, or a sourced profile file:
+is not setting the title properly, try adding the following to the `@tmux_conf`
+config, or your `.bashrc`/`.zshrc`/a sourced profile file (only the environment
+of the calling shell matters):
 
 `export vim_force_tmux_title_change=true`
+
+Alternatively, for greater robustness, add `let g:vim_force_tmux_title_change =
+1` to your `~/.vimrc`.
 
 The only format that can be changed for the vim title is the prefix, currently
 set as `v:` to keep it out of the way:
 
-- `vim_title_prefix="v:"`
+- `$vim_title_prefix="v:"` OR `let g:vim_title_prefix = 'v:'`
 
 Note, you can chose not to install the vim plugin, in which case either you will
 end up with `vim:<path>` in the title, or another title produced internally by
 vim, depending on your settings.
+
+Finally, if you want to add the path to the terminal and window title also, you
+can do so with `vim_include_path`, if this variable equates to `long`, the whole
+path will be included, which can make your titles very large, if it is just
+`true`, then any directories between you and the file are included. To set,
+either edit the config file to include `export vim_include_path='long'` or add
+the following line to your `~/.vimrc`:
+
+```
+let g:vim_include_path = 1 OR 'long'
+```
+
+To explicily disable the path (the default), set:
+
+```
+let g:vim_include_path = 0
+```
 
 If `tmux_set_window_status` is true, then the window-name will be automatically
 changed also, and for the window running vim the current-window-status-format

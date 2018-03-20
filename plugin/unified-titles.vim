@@ -6,11 +6,22 @@
 set notitle
 
 " Get Variables
-let vim_title_prefix = system('[ -n "$vim_title_prefix" ] || vim_title_prefix="v:"; echo -n "${vim_title_prefix}" | tr -d "[:space:]"')
-let hastmux = system('[ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && echo -n true || echo -n false | tr -d "[:space:]"')
-let override = system('[ -z "$vim_force_tmux_title_change" ] && echo -n false || echo -n true | tr -d "[:space:]"')
-let window_update = system('[ -z "$tmux_set_window_status" ] && echo -n false || echo -n true | tr -d "[:space:]"')
-if window_update == 'true'
+if !exists("g:vim_title_prefix")
+  let g:vim_title_prefix = system('[ -n "$vim_title_prefix" ] || vim_title_prefix="v:"; echo -n "${vim_title_prefix}" | tr -d "[:space:]"')
+endif
+if !exists("g:vim_force_tmux_title_change")
+  let g:vim_force_tmux_title_change = system('[ -n "$vim_force_tmux_title_change" ] && $tmux_force_tmux_title_change && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
+endif
+if !exists("g:tmux_set_window_status")
+  let g:tmux_set_window_status = system('[ -n "$tmux_set_window_status" ] && $tmux_set_window_status && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
+endif
+if !exists("g:vim_include_path")
+  let g:vim_include_path = system('if [ -n "$vim_include_path" ]; then if [[ $vim_include_path == "long" ]]; then echo -n long; elif [[ $vim_include_path == "true" ]]; then echo -n 1; else echo -n 0; fi; else echo -n 0; fi | tr -d "[:space:]"')
+endif
+let hastmux = system('[ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
+
+" Get window format and update to terminal title if window status update
+if g:tmux_set_window_status
   let win_orig_status = system('[ -n "$tmux_win_current_fmt" ] || tmux_win_current_fmt="#I:#W#F" ; echo -n $tmux_win_current_fmt')
   " We use the terminal title in both the terminal and status line in
   " vim only, so substitute window name (#W) for terminal title (#T)
@@ -18,7 +29,7 @@ if window_update == 'true'
 endif
 
 " Set tmux control chars
-if hastmux == 'true'
+if !hastmux
   if &term == "screen" || &term == "screen-256color"
     set t_ts=]0;
     set t_fs=
@@ -29,7 +40,7 @@ if hastmux == 'true'
 endif
 
 " Run manual updates if requested
-if window_update == 'true' || override == 'true'
+if g:tmux_set_window_status || g:vim_force_tmux_title_change
 
   " Override the terminal title if vim messes up
   function! SetTmuxTerminalTitle(titleString)
@@ -77,36 +88,42 @@ if window_update == 'true' || override == 'true'
   endfor
 
   " Set the initial title. Initial title has no modStr.
-  let simpleTitle = vim_title_prefix . tr(expand("%:t"), my_asciictrl, my_unisubst)
+  let simpleTitle = g:vim_title_prefix . tr(expand("%:t"), my_asciictrl, my_unisubst)
 endif
 
 " If requested set the initial window name
-if window_update == 'true'
-  if hastmux == 'true' || &term == "screen" || &term == "screen-256color"
+if g:tmux_set_window_status
+  if hastmux || &term == "screen" || &term == "screen-256color"
     call SetTmuxWindowTitleFormat(simpleTitle, win_vim_status)
   endif
 endif
 
 " Actually set the terminal title
-set title titlestring=%{vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)
+if g:vim_include_path == 'long'
+  set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:p:t\")}%)%(\ %M%)
+elseif g:vim_include_path == 1 || g:vim_include_path == '1'
+  set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:.:p:t\")}%)%(\ %M%)
+else
+  set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)
+endif
 
 " Use autocommands if the user wants to also update the tmux status window name
 " or if the simple titlestring setting does not work.
-if window_update == 'true' || override == 'true'
+if g:tmux_set_window_status || g:vim_force_tmux_title_change
   augroup termTitle
     " Clear prior commands in termTitle
     au!
     " Only do anything if we are in tmux
-    if hastmux == 'true' || &term == "screen" || &term == "screen-256color"
+    if hastmux || &term == "screen" || &term == "screen-256color"
       autocmd BufEnter,BufLeave,BufWritePost,FileWritePost,InsertEnter,TabEnter,WinEnter * let modStr = GetModStr()
-      autocmd BufEnter,BufLeave,BufWritePost,FileWritePost,InsertEnter,TabEnter,WinEnter * let simpleTitle = vim_title_prefix . tr(expand("%:t"), my_asciictrl, my_unisubst) . modStr
+      autocmd BufEnter,BufLeave,BufWritePost,FileWritePost,InsertEnter,TabEnter,WinEnter * let simpleTitle = g:vim_title_prefix . tr(expand("%:t"), my_asciictrl, my_unisubst) . modStr
       " Set window titles
-      if window_update == 'true'
+      if g:tmux_set_window_status
         autocmd BufEnter,BufLeave,BufWritePost,FileWritePost,InsertEnter,TabEnter,WinEnter * call SetTmuxWindowTitle(simpleTitle)
         autocmd VimLeave * call ResetTmuxWindowTitle(win_orig_status)
       endif
       " Set title using terminal commands
-      if override == 'true'
+      if g:vim_force_tmux_title_change
         autocmd BufEnter,BufWritePost,TabEnter,WinEnter * call SetTmuxTerminalTitle(simpleTitle)
       endif
       " Clear title on leaving vim
