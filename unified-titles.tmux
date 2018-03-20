@@ -61,3 +61,7 @@ main() {
     fi
 }
 main
+
+# Update string on attach and detatch
+tmux set-hook -g after-client-attached "run \'$CURRENT_DIR/unified-titles.tmux\'"
+tmux set-hook -g after-client-detached "run \'echo -ne \"\\e]0;$HOSTNAME\\a\"\'"
