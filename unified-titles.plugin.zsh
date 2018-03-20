@@ -4,28 +4,32 @@
 
 CURRENT_DIR="$(dirname $0:A)"
 
-# Source applicable profiles
-if [ -f "$HOME/.tmux/profile.sh" ]; then
-    source "$HOME/.tmux/profile.sh" 2>/dev/null >/dev/null
+# Get default starting strings
+# shellcheck source=defaults.sh
+. $CURRENT_DIR/defaults.sh
+
+[ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && in_tmux=true || in_tmux=false
+[ -x "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ] && t_plug=true || t_plug=false
+
+# Source tmux profile if available
+if $in_tmux; then
+    TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tr -d "[:space:]")
 fi
-if [ -f "$HOME/.profile" ]; then
-    source "$HOME/.profile" 2>/dev/null >/dev/null
-fi
-TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tr -d "[:space:]")
+[ -n "$TMUX_CONF" ] || TMUX_CONF="$HOME/.tmux/profile.sh"
 if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi
 
-# Get formats
-[ -n "$zsh_title_fmt" ]  || zsh_title_fmt='${cmd}:${pth}'
-[ -n "$pth_width" ]      || pth_width=60
-[ -n "$win_pth_width" ]  || win_pth_width=25
-
-if [ -n "$tmux_set_window_status" ] && [ -n "$TMUX" ]; then
-    [ -n "$tmux_win_current_fmt" ] || tmux_win_current_fmt='#I:#W#F'
-    [ -n "$tmux_win_other_fmt" ]   || tmux_win_other_fmt='#I:#W#F'
-    tmux set-window-option -g window-status-current-format "${tmux_win_current_fmt}"
-    tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
+# Run the tmux title setting plugin on shell start
+TITLE_PRE=""
+if $in_tmux; then
+    if $t_plug; then
+        "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux"
+    fi
+else
+    if [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
+        TITLE_PRE="$($CURRENT_DIR/scripts/get_hoststring.py --host-only | tr -d "[:space:]"):"
+    fi
 fi
 
 # Set titles
@@ -38,6 +42,8 @@ function update_title() {
     cmd=${cmd//$'\n'/}
     pth="%${pth_width}<...<%~"
     short_pth="%${win_pth_width}<...<%~"
+
+    # Set core titles
     if [ -n "$cmd" ]; then
         TITLE=$(eval echo "${zsh_title_fmt}")
         SHORT_TITLE=$(eval echo "${zsh_title_fmt/$'pth'/short_pth}")
@@ -45,51 +51,40 @@ function update_title() {
         TITLE=${pth}
         SHORT_TITLE=${short_pth}
     fi
-    # If we are not on tmux, add hostname to TITLE string
-    if [ ! -n "$TMUX" ]; then
-        # Force source the tmux plugin if it hasn't been sourced?
-        if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
-            TITLE="$(${CURRENT_DIR}/scripts/get_hoststring.py --host-only):${TITLE}"
-        fi
+
+    # Add host to title if necessary
+    if [ -n "$TITLE_PRE" ] && [[ ! "$TITLE" =~ "$TITLE_PRE" ]]; then
+        TITLE="${TITLE_PRE}${TITLE}"
     fi
-    # Terminal title
-    if [[ -n "$TMUX" ]]; then
-        print -Pn "\ek${(%)TITLE}\e\\"
-        print -Pn "\e]0;${(%)TITLE}\a"
-    elif [[ "$TERM" =~ screen* ]]; then
-        print -Pn "\ek${(%)TITLE}\e\\"
+
+    # Terminal title (work even if ssh from tmux)
+    if [ -n "$TMUX" ] || [[ "$TERM" =~ screen* ]]; then
+        # print -Pn "\ek${(%)TITLE}\e\\"  # Sets window name
         print -Pn "\e]0;${(%)TITLE}\a"
     elif [[ "$TERM" =~ xterm* ]]; then
         print -Pn "\e]0;${(%)TITLE}\a"
     elif [[ "$TERM" =~ ^rxvt-unicode.* ]]; then
         printf '\33]2;%s\007' ${(%)TITLE}
     fi
+
     # Tmux Specific Stuff
-    if [ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null; then
-        if [ ! -n "$tmux_set_window_status" ]; then
-            export tmux_set_window_status=$(tmux show-option -gqv @tmux_set_window_status | tr -d "[:space:]")
+    if $in_tmux; then
+        # Reset tmux portion of the title if plugin is installed
+        # Run as source to preserve current environment
+        if $t_plug; then
+            # shellcheck source=scripts/set_tmux_title.sh
+            . $CURRENT_DIR/scripts/set_tmux_title.sh
         fi
 
         # Tmux Window Title
         if [ -n "$tmux_set_window_status" ]; then
             # Only set the current window format globally once, as it is overriden elsewhere
             tmux set-window-option window-status-current-format "${tmux_win_current_fmt}"
-            tmux set-window-option -g window-status-format "${tmux_win_other_fmt}"
 
             # Window title is short path
+            # print -Pn "\ek${(%)SHORT_TITLE}\e\\"  # Sets window name
             tmux rename-window "${(%)SHORT_TITLE}"
         fi
-
-        # If ssh session has changed, rerun tmux plugin if installed
-        if [ -f "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ]; then
-            if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
-                if [[ ! $(tmux show-option -gqv @ssh-session-info) == "$SSH_CONNECTION" ]]; then
-                    tmux set -gq @ssh-session-info "$SSH_CONNECTION"
-                    $HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux
-                fi
-            fi
-        fi
-
     fi
 }
 
@@ -107,10 +102,13 @@ function _zsh_title__preexec() {
         %*)	cmd="${(z)jobtexts[${(Q)cmd[1]:-%+}]}" ;;
     esac
 
-    cmd=${cmd[1]}
+    cmd="${cmd[1]}"
 
     # Escape '\'
-    cmd=${cmd//\\/\\\\\\\\}
+    cmd="${cmd//\\/\\\\\\\\}"
+
+	# Strip start and end whitespace
+    cmd=$(echo "${cmd}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
     update_title "${cmd}"
 }
