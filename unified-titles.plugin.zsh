@@ -8,18 +8,24 @@ CURRENT_DIR="$(dirname $0:A)"
 # shellcheck source=defaults.sh
 . $CURRENT_DIR/defaults.sh
 
+[ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && in_tmux=true || in_tmux=false
+[ -x "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ] && t_plug=true || t_plug=false
+
 # Source tmux profile if available
-TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tr -d "[:space:]")
+if $in_tmux; then
+    TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tr -d "[:space:]")
+fi
 [ -n "$TMUX_CONF" ] || TMUX_CONF="$HOME/.tmux/profile.sh"
+
 if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi
 
 # Run the tmux title setting plugin on shell start
 TITLE_PRE=""
-if [ -n "$TMUX" ]; then
-    if [ -x "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ]; then
-        $HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux
+if $in_tmux; then
+    if $t_plug; then
+        "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux"
     fi
 else
     if [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
@@ -46,7 +52,9 @@ function update_title() {
         TITLE=${pth}
         SHORT_TITLE=${short_pth}
     fi
-    if [[ ! $TITLE =~ $TITLE_PRE ]]; then
+
+    # Add host to title if necessary
+    if [ -n "$TITLE_PRE" ] && [[ ! "$TITLE" =~ "$TITLE_PRE" ]]; then
         TITLE="${TITLE_PRE}${TITLE}"
     fi
 
@@ -64,7 +72,7 @@ function update_title() {
     if $in_tmux; then
         # Reset tmux portion of the title if plugin is installed
         # Run as source to preserve current environment
-        if [ -f "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ]; then
+        if $t_plug; then
             # shellcheck source=scripts/set_tmux_title.sh
             . $CURRENT_DIR/scripts/set_tmux_title.sh
         fi
