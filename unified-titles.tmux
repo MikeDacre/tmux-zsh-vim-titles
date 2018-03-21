@@ -24,22 +24,22 @@ if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi
 
-# # Add variables to the tmux environment
-# declare -a all_vars
-# all_vars=("DISPLAY" "SSH_CONNECTION" "tmux_set_window_status" "vim_force_tmux_title_change" \
-          # "tmux_title_start" "tmux_title_root" "tmux_title_format" "tmux_title_format_ssh" \
-          # "tmux_win_current_fmt" "tmux_win_other_fmt")
-# # Get existing tmux update-environment variables
-# variables="$(tmux show-option -g update-environment | sed 's/.*] "\([^"]\+\)"/\1/' | xargs echo -n)"
-# # Add ours only if they do not already exist
-# for var in "${all_vars[@]}"; do
-    # if [[ ! "$variables" =~ $var ]]; then
-        # variables+=" $var"
-    # fi
-# done
-# # Set them now, they will be updated in the shell by sourcing
-# # scripts/set_tmux_title.sh
-# tmux set -g update-environment "${variables}"
+# Add variables to the tmux environment
+declare -a all_vars
+all_vars=("DISPLAY" "SSH_CONNECTION" "tmux_set_window_status" "vim_force_tmux_title_change" \
+          "tmux_title_start" "tmux_title_root" "tmux_title_format" "tmux_title_format_ssh" \
+          "tmux_win_current_fmt" "tmux_win_other_fmt")
+# Get existing tmux update-environment variables
+variables="$(tmux show-option -g update-environment | sed 's/.*] "\([^"]\+\)"/\1/' | xargs echo -n)"
+# Add ours only if they do not already exist
+for var in "${all_vars[@]}"; do
+    if [[ ! "$variables" =~ $var ]]; then
+        variables+=" $var"
+    fi
+done
+# Set them now, they will be updated in the shell by sourcing
+# scripts/set_tmux_title.sh
+tmux set -g update-environment "${variables}"
 
 main() {
     # Turn tmux titles on
