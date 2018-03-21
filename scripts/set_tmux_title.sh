@@ -13,18 +13,18 @@ else
     BELL_STR=''
 fi
 
-# Update shell environment from variables
-update_env_from_tmux() {
-    local envs
-    IFS=$'\n' envs=($(tmux show-environment | grep -v "^-" | grep '=' | sed 's/ /\\ /g'))
-    for env in "${envs[@]}"; do
-        eval "${env}"
-    done
-}
+# # Update shell environment from variables
+# update_env_from_tmux() {
+    # local envs
+    # IFS=$'\n' envs=($(tmux show-environment | grep -v "^-" | grep '=' | sed 's/ /\\ /g'))
+    # for env in "${envs[@]}"; do
+        # eval "${env}"
+    # done
+# }
 
 main() {
     # Update the shell environment
-    update_env_from_tmux
+    # update_env_from_tmux
     # Detect if we are in an SSH session, use script to munge tmux_title_format_ssh
 	# if we are, else just use the simple title format
     # Note: SSH_TTY and SSH_CLIENT remain set by children of tmux if tmux started by an
