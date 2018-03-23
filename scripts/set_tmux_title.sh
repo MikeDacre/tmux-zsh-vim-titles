@@ -15,13 +15,7 @@ fi
 
 # Update shell environment from variables
 update_env_from_tmux() {
-    local envs
-    old_ifs=${IFS}
-    IFS=$'\n' envs=($(tmux show-environment | grep -v "^-" | grep '=' | sed 's/ /\\ /g'))
-    IFS=${old_ifs}
-    for env in "${envs[@]}"; do
-        eval "${env}"
-    done
+    eval "$(tmux show-environment -s | grep -v "^unset")"
 }
 
 main() {
