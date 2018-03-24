@@ -276,11 +276,15 @@ let g:vim_include_path = 0
 ### Long Paths on ZSH, Plus ZSH Named Directories
 
 If you are using ZSH and Vim, the maximum length of the 'long' path will be set
-at `path_width`, which defaults to *40* chars. Furthermore, if you use named
-directories (specified with `hash -d name=path`), these will be included in the
-short path. These must be specified in a ZSH config file, which is defined by
-`$ZSH_BOOKMARKS` and defaults to `~/.zshbookmarks`. You can manage this file
-with the [cdbk plugin](https://github.com/MikeDacre/cdbk).
+at `path_width`, which defaults to *40* chars (this can be overriden just for
+vim by adding `let g:vim_path_width = <len>` to your `~/.vimrc`, or for both vim
+and ZSH by adding `export path_width=<len>` to your `~/.zshrc`.
+
+Furthermore, if you use named directories (specified with `hash -d name=path`),
+these will be included in the short path. These must be specified in a ZSH
+config file, which is defined by `$ZSH_BOOKMARKS` and defaults to
+`~/.zshbookmarks`. You can manage this file with the [cdbk
+plugin](https://github.com/MikeDacre/cdbk).
 
 ### Tmux Window Name Alteration
 
