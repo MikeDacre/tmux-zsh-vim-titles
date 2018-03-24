@@ -286,6 +286,9 @@ config file, which is defined by `$ZSH_BOOKMARKS` and defaults to
 `~/.zshbookmarks`. You can manage this file with the [cdbk
 plugin](https://github.com/MikeDacre/cdbk).
 
+To use ZSH paths when in ZSH or no paths at all other times, set
+`g:vim_include_path` to `zsh`.
+
 ### Tmux Window Name Alteration
 
 If `tmux_set_window_status` is true, then the window-name will be automatically
