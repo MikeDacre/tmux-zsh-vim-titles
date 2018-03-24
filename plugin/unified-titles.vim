@@ -18,6 +18,12 @@ endif
 if !exists("g:vim_include_path")
   let g:vim_include_path = system('if [ -n "$vim_include_path" ]; then if [[ $vim_include_path == "long" ]]; then echo -n long; elif [[ $vim_include_path == "true" ]]; then echo -n 1; else echo -n 0; fi; else echo -n 0; fi | tr -d "[:space:]"')
 endif
+if !exists("g:vim_path_width")
+  let g:vim_path_width = system('[ -n "$path_width" ] || path_width=40; echo -n "${path_width}" | tr -d "[:space:]"')
+endif
+if !exists("g:zsh_bookmarks")
+  let g:zsh_bookmarks = system('[ -n "$zsh_bookmarks" ] || zsh_bookmarks="$HOME/.zshbookmarks"; echo -n "${zsh_bookmarks} | tr -d "[:space:]"')
+endif
 let hastmux = system('[ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
 
 " Get window format and update to terminal title if window status update
@@ -98,9 +104,24 @@ if g:tmux_set_window_status
   endif
 endif
 
+" Function to get named directory in zsh
+let s:path = fnamemodify(resolve(expand('<sfile>:p')), ':h')
+let g:zsh_path = 0
+function! ZSHDirs()
+  let g:dir_path = system(s:path . '/get_zsh_named_dirs.zsh ' . expand("%:~:p:t") . ' ' . g:vim_path_width . ' ' . g:zsh_bookmarks)
+endfunction
+
+
 " Actually set the terminal title
 if g:vim_include_path == 'long'
-  set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:p:t\")}%)%(\ %M%)
+  if $SHELL =~ 'zsh'
+    call ZSHDirs()
+    let g:zsh_path = 1
+    autocmd BufEnter,BufNewFile,ShellCmdPost,TabEnter,WinEnter * call ZSHDirs()
+    set title titlestring=%{g:vim_title_prefix}%{g:dir_path}:%(%{expand(\"%:t\")}%)%(\ %M%)
+  else
+    set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:p:t\")}%)%(\ %M%)
+  endif
 elseif g:vim_include_path == 1 || g:vim_include_path == '1'
   set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:.:p:t\")}%)%(\ %M%)
 else

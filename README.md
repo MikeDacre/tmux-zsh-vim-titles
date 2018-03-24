@@ -258,10 +258,10 @@ vim, depending on your settings.
 
 Finally, if you want to add the path to the terminal and window title also, you
 can do so with `vim_include_path`, if this variable equates to `long`, the whole
-path will be included, which can make your titles very large, if it is just
-`true`, then any directories between you and the file are included. To set,
-either edit the config file to include `export vim_include_path='long'` or add
-the following line to your `~/.vimrc`:
+path will be included, which can make your titles very large (unless you use ZSH
+named dirs, see below), if it is just `true`, then any directories between you
+and the file are included. To set, either edit the config file to include
+`export vim_include_path='long'` or add the following line to your `~/.vimrc`:
 
 ```
 let g:vim_include_path = 1 OR 'long'
@@ -272,6 +272,17 @@ To explicily disable the path (the default), set:
 ```
 let g:vim_include_path = 0
 ```
+
+### Long Paths on ZSH, Plus ZSH Named Directories
+
+If you are using ZSH and Vim, the maximum length of the 'long' path will be set
+at `path_width`, which defaults to *40* chars. Furthermore, if you use named
+directories (specified with `hash -d name=path`), these will be included in the
+short path. These must be specified in a ZSH config file, which is defined by
+`$ZSH_BOOKMARKS` and defaults to `~/.zshbookmarks`. You can manage this file
+with the [cdbk plugin](https://github.com/MikeDacre/cdbk).
+
+### Tmux Window Name Alteration
 
 If `tmux_set_window_status` is true, then the window-name will be automatically
 changed also, and for the window running vim the current-window-status-format
