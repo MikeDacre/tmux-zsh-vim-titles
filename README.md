@@ -1,5 +1,6 @@
 # Unified Tmux-ZSH-Vim Terminal Titles
 
+
 Creates intelligent terminal titles in tmux, zsh, and vim, that work together
 to give information about session, ssh host, path, and currently edited vim
 buffer. Each part is modular and must be installed separately.
@@ -263,14 +264,23 @@ named dirs, see below), if it is just `true`, then any directories between you
 and the file are included. To set, either edit the config file to include
 `export vim_include_path='long'` or add the following line to your `~/.vimrc`:
 
+```vim
+let g:vim_include_path = 1 " OR 'long'/'zsh'
 ```
-let g:vim_include_path = 1 OR 'long'
-```
+
+Otherwise the path follows the format elsewhere: `t:session:v:file.txt:~/code/`
 
 To explicily disable the path (the default), set:
 
-```
+```vim
 let g:vim_include_path = 0
+```
+
+To make the path go before the filename (more traditional), add this command to
+your `~/.vimrc`:
+
+```vim
+let g:title_path_before = 1
 ```
 
 ### Long Paths on ZSH, Plus ZSH Named Directories

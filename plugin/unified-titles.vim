@@ -21,6 +21,9 @@ endif
 if !exists("g:vim_path_width")
   let g:vim_path_width = system('[ -n "$path_width" ] || path_width=40; echo -n "${path_width}" | tr -d "[:space:]"')
 endif
+if !exists("g:title_path_before")
+  let g:title_path_before = 0
+endif
 let s:zsh_bookmarks = system('[ -n "$ZSH_BOOKMARKS" ] || ZSH_BOOKMARKS="$HOME/.zshbookmarks"; echo -n "${ZSH_BOOKMARKS}" | tr -d "[:space:]"')
 let s:has_tmux = system('[ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
 
@@ -115,20 +118,36 @@ if g:vim_include_path == 'long'
   if $SHELL =~ 'zsh'
     call ZSHDirs()
     autocmd BufEnter,BufNewFile,TabEnter,WinEnter * call ZSHDirs()
-    set title titlestring=%{g:vim_title_prefix}%{g:dir_path}:%(%{expand(\"%:t\")}%)%(\ %M%)
+    if g:title_path_before
+      set title titlestring=%{g:vim_title_prefix}%{g:dir_path}:%(%{expand(\"%:t\")}%)%(\ %M%)
+    else
+      set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%):%{g:dir_path}%(\ %M%)
+    endif
   else
-    set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:p:t\")}%)%(\ %M%)
+    if g:title_path_before
+      set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:p:t\")}%)%(\ %M%)
+    else
+      set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%):%(%{expand(\"%:~:h\")}%)%(\ %M%)
+    endif
   endif
 elseif g:vim_include_path == 'zsh'
   if $SHELL =~ 'zsh'
     call ZSHDirs()
     autocmd BufEnter,BufNewFile,TabEnter,WinEnter * call ZSHDirs()
-    set title titlestring=%{g:vim_title_prefix}%{g:dir_path}:%(%{expand(\"%:t\")}%)%(\ %M%)
+    if g:title_path_before
+      set title titlestring=%{g:vim_title_prefix}%{g:dir_path}:%(%{expand(\"%:t\")}%)%(\ %M%)
+    else
+      set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%):%{g:dir_path}%(\ %M%)
+    endif
   else
     set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)
   endif
 elseif g:vim_include_path == 1 || g:vim_include_path == '1'
-  set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:.:p:t\")}%)%(\ %M%)
+  if g:title_path_before
+    set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:.:p:t\")}%)%(\ %M%)
+  else
+    set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%):%(%{expand(\"%:~:.:h\")}%)%(\ %M%)
+  endif
 else
   set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)
 endif
