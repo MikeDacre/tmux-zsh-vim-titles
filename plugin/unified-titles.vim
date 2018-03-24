@@ -21,10 +21,8 @@ endif
 if !exists("g:vim_path_width")
   let g:vim_path_width = system('[ -n "$path_width" ] || path_width=40; echo -n "${path_width}" | tr -d "[:space:]"')
 endif
-if !exists("g:zsh_bookmarks")
-  let g:zsh_bookmarks = system('[ -n "$zsh_bookmarks" ] || zsh_bookmarks="$HOME/.zshbookmarks"; echo -n "${zsh_bookmarks} | tr -d "[:space:]"')
-endif
-let hastmux = system('[ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
+let s:zsh_bookmarks = system('[ -n "$ZSH_BOOKMARKS" ] || ZSH_BOOKMARKS="$HOME/.zshbookmarks"; echo -n "${ZSH_BOOKMARKS}" | tr -d "[:space:]"')
+let s:has_tmux = system('[ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
 
 " Get window format and update to terminal title if window status update
 if g:tmux_set_window_status
@@ -35,7 +33,7 @@ if g:tmux_set_window_status
 endif
 
 " Set tmux control chars
-if !hastmux
+if !s:has_tmux
   if &term == "screen" || &term == "screen-256color"
     set t_ts=]0;
     set t_fs=
@@ -99,7 +97,7 @@ endif
 
 " If requested set the initial window name
 if g:tmux_set_window_status
-  if hastmux || &term == "screen" || &term == "screen-256color"
+  if s:has_tmux || &term == "screen" || &term == "screen-256color"
     call SetTmuxWindowTitleFormat(simpleTitle, win_vim_status)
   endif
 endif
@@ -108,7 +106,7 @@ endif
 let s:path = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 let g:zsh_path = 0
 function! ZSHDirs()
-  let g:dir_path = system(s:path . '/get_zsh_named_dirs.zsh ' . expand("%:~:p:t") . ' ' . g:vim_path_width . ' ' . g:zsh_bookmarks)
+  let g:dir_path = system(s:path . '/get_zsh_named_dirs.zsh ' . expand("%:~:p:t") . ' ' . g:vim_path_width . ' ' . s:zsh_bookmarks)
 endfunction
 
 
@@ -116,8 +114,7 @@ endfunction
 if g:vim_include_path == 'long'
   if $SHELL =~ 'zsh'
     call ZSHDirs()
-    let g:zsh_path = 1
-    autocmd BufEnter,BufNewFile,ShellCmdPost,TabEnter,WinEnter * call ZSHDirs()
+    autocmd BufEnter,BufNewFile,TabEnter,WinEnter * call ZSHDirs()
     set title titlestring=%{g:vim_title_prefix}%{g:dir_path}:%(%{expand(\"%:t\")}%)%(\ %M%)
   else
     set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:p:t\")}%)%(\ %M%)
@@ -135,7 +132,7 @@ if g:tmux_set_window_status || g:vim_force_tmux_title_change
     " Clear prior commands in termTitle
     au!
     " Only do anything if we are in tmux
-    if hastmux || &term == "screen" || &term == "screen-256color"
+    if s:has_tmux || &term == "screen" || &term == "screen-256color"
       autocmd BufEnter,BufLeave,BufWritePost,FileWritePost,InsertEnter,TabEnter,WinEnter * let modStr = GetModStr()
       autocmd BufEnter,BufLeave,BufWritePost,FileWritePost,InsertEnter,TabEnter,WinEnter * let simpleTitle = g:vim_title_prefix . tr(expand("%:t"), my_asciictrl, my_unisubst) . modStr
       " Set window titles
