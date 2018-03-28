@@ -26,6 +26,7 @@ if !exists("g:title_path_before")
 endif
 let s:zsh_bookmarks = system('[ -n "$ZSH_BOOKMARKS" ] || ZSH_BOOKMARKS="$HOME/.zshbookmarks"; echo -n "${ZSH_BOOKMARKS}" | tr -d "[:space:]"')
 let s:has_tmux = system('[ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
+let s:has_zsh = system('hash zsh 2>/dev/null && echo -n 1 || echo -n 0 | tr -d "[:space:]"')
 
 " Get window format and update to terminal title if window status update
 if g:tmux_set_window_status
@@ -109,12 +110,14 @@ endif
 let s:path = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 let g:zsh_path = 0
 function! ZSHDirs()
-  let g:dir_path = system(s:path . '/get_zsh_named_dirs.zsh ' . expand("%:~:p:t") . ' ' . g:vim_path_width . ' ' . s:zsh_bookmarks)
+  let g:dir_path = system('zsh ' . s:path . '/get_zsh_named_dirs.zsh ' . expand("%:~:p:t") . ' ' . g:vim_path_width . ' ' . s:zsh_bookmarks)
 endfunction
 
 
 " Actually set the terminal title
-if g:vim_include_path == 'long'
+if g:vim_include_path == 0 || g:vim_include_path == '0'
+  set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)
+elseif g:vim_include_path == 'long'
   if $SHELL =~ 'zsh'
     call ZSHDirs()
     autocmd BufEnter,BufNewFile,TabEnter,WinEnter * call ZSHDirs()
@@ -131,7 +134,7 @@ if g:vim_include_path == 'long'
     endif
   endif
 elseif g:vim_include_path == 'zsh'
-  if $SHELL =~ 'zsh'
+  if g:has_zsh == '1'
     call ZSHDirs()
     autocmd BufEnter,BufNewFile,TabEnter,WinEnter * call ZSHDirs()
     if g:title_path_before
