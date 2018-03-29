@@ -4,10 +4,6 @@
 
 CURRENT_DIR="$(dirname $0:A)"
 
-# Get default starting strings
-# shellcheck source=defaults.sh
-. $CURRENT_DIR/defaults.sh
-
 [ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && in_tmux=true || in_tmux=false
 [ -x "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ] && t_plug=true || t_plug=false
 
@@ -20,6 +16,10 @@ fi
 if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi
+
+# Get default starting strings, no existing variables overwritten.
+# shellcheck source=defaults.sh
+. $CURRENT_DIR/defaults.sh
 
 # Run the tmux title setting plugin on shell start
 TITLE_PRE=""

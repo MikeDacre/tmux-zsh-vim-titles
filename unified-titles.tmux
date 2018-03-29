@@ -2,10 +2,6 @@
 
 CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Get default starting strings
-# shellcheck source=defaults.sh
-. "$CURRENT_DIR/defaults.sh"
-
 # Attempt to get all applicable profiles as tmux runs this code
 # with no environment
 if [ -f "$HOME/.bashrc" ]; then
@@ -23,6 +19,10 @@ fi
 if [ -f "$TMUX_CONF" ]; then
     source "$TMUX_CONF" 2>/dev/null >/dev/null
 fi
+
+# Get default starting strings, no set variables overwritten
+# shellcheck source=defaults.sh
+. "$CURRENT_DIR/defaults.sh"
 
 # Add variables to the tmux environment
 declare -a all_vars

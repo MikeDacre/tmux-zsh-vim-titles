@@ -1,9 +1,17 @@
-"""""""""""""""""""""""""
-"  Set Title by Buffer  "
-"""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"                             Set Title by Buffer                             "
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-" Start fresh
-set notitle
+"""""""""""""""""""""""""""""""
+"  Check and Get Environment  "
+"""""""""""""""""""""""""""""""
+
+" Get path to self
+let s:path = fnamemodify(resolve(expand('<sfile>:p')), ':h')
+
+" Source shell profiles
+call system('[ -n "$TMUX_CONF" ] || TMUX_CONF="$HOME/.tmux/profile.sh"; source $TMUX_CONF >/dev/null 2>/dev/null')
+call system('cd $(dirname ' . s:path . '); source defaults.sh')
 
 " Get Variables
 if !exists("g:vim_title_prefix")
@@ -36,18 +44,17 @@ if g:tmux_set_window_status
   let win_vim_status  = substitute(win_orig_status, '#W', '#T', 'g')
 endif
 
-" Set tmux control chars
-if !s:has_tmux
-  if &term == "screen" || &term == "screen-256color"
-    set t_ts=]0;
-    set t_fs=
-  elseif &term == 'nvim'
-    set t_ts=k
-    set t_fs=
-  endif
-endif
+"""""""""""""""
+"  Functions  "
+"""""""""""""""
 
-" Run manual updates if requested
+" Function to get named directory in zsh
+let g:zsh_path = 0
+function! ZSHDirs()
+  let g:dir_path = system('zsh ' . s:path . '/get_zsh_named_dirs.zsh ' . expand("%:~:h") . ' ' . g:vim_path_width . ' ' . s:zsh_bookmarks)
+endfunction
+
+" Tmux Specific Functions
 if g:tmux_set_window_status || g:vim_force_tmux_title_change
 
   " Override the terminal title if vim messes up
@@ -99,6 +106,78 @@ if g:tmux_set_window_status || g:vim_force_tmux_title_change
   let simpleTitle = g:vim_title_prefix . tr(expand("%:t"), my_asciictrl, my_unisubst)
 endif
 
+
+""""""""""""""""""""""""""""""
+"  Set Basic Title Settings  "
+""""""""""""""""""""""""""""""
+
+" Start fresh
+set notitle
+
+" Set tmux control chars
+if !s:has_tmux
+  if &term == "screen" || &term == "screen-256color"
+    set t_ts=]0;
+    set t_fs=
+  elseif &term == 'nvim'
+    set t_ts=k
+    set t_fs=
+  endif
+endif
+
+"""""""""""""""""""
+"  Set the Title  "
+"""""""""""""""""""
+
+" Decide which title to use
+if g:vim_include_path == '0' || g:vim_include_path == '0'
+  let s:title_type = 'simple'
+elseif g:vim_include_path == 'long'
+  if $SHELL =~ 'zsh'
+    let s:title_type = 'zsh'
+  else
+    let s:title_type = 'long'
+  endif
+elseif g:vim_include_path == 'zsh'
+  if $SHELL =~ 'zsh' || g:has_zsh == '1'
+    let s:title_type = 'zsh'
+  else
+    let s:title_type = 'simple'
+  endif
+elseif g:vim_include_path == 1 || g:vim_include_path == '1'
+  let s:title_type = 'short'
+else
+  let s:title_type = 'simple'
+endif
+
+" Actually set the terminal title
+if s:title_type == 'simple'
+  set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)
+elseif s:title_type == 'zsh'
+  call ZSHDirs()
+  augroup zshPath
+    au!
+    autocmd BufEnter,BufNewFile,TabEnter,WinEnter * call ZSHDirs()
+  augroup END
+  if g:title_path_before
+    set title titlestring=%{g:vim_title_prefix}%{g:dir_path}:%(%{expand(\"%:t\")}%)%(\ %M%)
+  else
+    set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%):%{g:dir_path}%(\ %M%)
+  endif
+elseif s:title_type == 'long'
+  if g:title_path_before
+    set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:p:t\")}%)%(\ %M%)
+  else
+    set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%):%(%{expand(\"%:~:h\")}%)%(\ %M%)
+  endif
+elseif s:title_type == 'short'
+  if g:title_path_before
+    set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:.:p:t\")}%)%(\ %M%)
+  else
+    set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%):%(%{expand(\"%:~:.:h\")}%)%(\ %M%)
+  endif
+endif
+
 " If requested set the initial window name
 if g:tmux_set_window_status
   if s:has_tmux || &term == "screen" || &term == "screen-256color"
@@ -106,54 +185,9 @@ if g:tmux_set_window_status
   endif
 endif
 
-" Function to get named directory in zsh
-let s:path = fnamemodify(resolve(expand('<sfile>:p')), ':h')
-let g:zsh_path = 0
-function! ZSHDirs()
-  let g:dir_path = system('zsh ' . s:path . '/get_zsh_named_dirs.zsh ' . expand("%:~:p:t") . ' ' . g:vim_path_width . ' ' . s:zsh_bookmarks)
-endfunction
-
-
-" Actually set the terminal title
-if g:vim_include_path == 0 || g:vim_include_path == '0'
-  set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)
-elseif g:vim_include_path == 'long'
-  if $SHELL =~ 'zsh'
-    call ZSHDirs()
-    autocmd BufEnter,BufNewFile,TabEnter,WinEnter * call ZSHDirs()
-    if g:title_path_before
-      set title titlestring=%{g:vim_title_prefix}%{g:dir_path}:%(%{expand(\"%:t\")}%)%(\ %M%)
-    else
-      set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%):%{g:dir_path}%(\ %M%)
-    endif
-  else
-    if g:title_path_before
-      set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:p:t\")}%)%(\ %M%)
-    else
-      set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%):%(%{expand(\"%:~:h\")}%)%(\ %M%)
-    endif
-  endif
-elseif g:vim_include_path == 'zsh'
-  if g:has_zsh == '1'
-    call ZSHDirs()
-    autocmd BufEnter,BufNewFile,TabEnter,WinEnter * call ZSHDirs()
-    if g:title_path_before
-      set title titlestring=%{g:vim_title_prefix}%{g:dir_path}:%(%{expand(\"%:t\")}%)%(\ %M%)
-    else
-      set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%):%{g:dir_path}%(\ %M%)
-    endif
-  else
-    set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)
-  endif
-elseif g:vim_include_path == 1 || g:vim_include_path == '1'
-  if g:title_path_before
-    set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:~:.:p:t\")}%)%(\ %M%)
-  else
-    set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%):%(%{expand(\"%:~:.:h\")}%)%(\ %M%)
-  endif
-else
-  set title titlestring=%{g:vim_title_prefix}%(%{expand(\"%:t\")}%)%(\ %M%)
-endif
+""""""""""""""""""""""""""""""
+"  Manage Tmux Window Names  "
+""""""""""""""""""""""""""""""
 
 " Use autocommands if the user wants to also update the tmux status window name
 " or if the simple titlestring setting does not work.
