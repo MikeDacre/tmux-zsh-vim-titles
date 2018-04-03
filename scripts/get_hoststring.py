@@ -82,8 +82,15 @@ def get_hostname():
         )
         host_dict = {}
 
-    host = os.environ.get('HOSTNAME').split('.')[0]
-    host = host if host else run('uname -n', get='stdout')
+    if 'HOSTSHORT' in os.environ:
+        host = os.environ.get('HOSTSHORT').split('.')[0]
+    elif 'HOSTNAME' in os.environ:
+        host = os.environ.get('HOSTNAME').split('.')[0]
+    elif 'HOST' in os.environ:
+        host = os.environ.get('HOST').split('.')[0]
+    else:
+        host = run('uname -n', get='stdout')
+
     host = host.strip()
     host = host_dict[host] if host in host_dict else host
     return host.strip()

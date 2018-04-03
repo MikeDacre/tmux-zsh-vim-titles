@@ -29,7 +29,16 @@ if $in_tmux; then
     fi
 else
     if [ -n "$SSH_CONNECTION" ] || [[ $(command -v ps -o comm= -p $PPID) =~ 'ssh' ]]; then
-        TITLE_PRE="$($CURRENT_DIR/scripts/get_hoststring.py --host-only | tr -d "[:space:]"):"
+        if [ -n "$zsh_title_hosts" ]; then
+            TITLE_PRE="$($CURRENT_DIR/scripts/get_hoststring.py --host-only | tr -d "[:space:]"):"
+        elif [ -n "$HOSTSHORT" ]; then
+            TITLE_PRE="${HOSTSHORT}:"
+        elif [ -n "$HOSTNAME" ]; then
+            TITLE_PRE="${HOSTNAME}:"
+        else
+            TITLE_PRE="${HOST}:"
+        fi
+
     fi
 fi
 

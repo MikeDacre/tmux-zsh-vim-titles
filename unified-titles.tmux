@@ -51,8 +51,27 @@ main() {
         tmux_start_str="${tmux_title_start}"
     fi
 
+    local host_string
+    local host_sep='#h'
+    # Munge the host string just once, but only if necessary
+    if [[ $tmux_title_format_ssh =~ $host_sep ]]; then
+        if [ -n "$zsh_title_hosts" ]; then
+            echo "$zsh_title_hosts"
+            host_string="$($CURRENT_DIR/scripts/get_hoststring.py | tr -d "[:space:]"):"
+        elif [ -n "$HOSTSHORT" ]; then
+            host_string="${tmux_title_format_ssh/$host_sep/$HOSTSHORT}"
+        elif [ -n "$HOSTNAME" ]; then
+            host_string="${tmux_title_format_ssh/$host_sep/$HOSTNAME}"
+        else
+            host_string="${tmux_title_format_ssh/$host_sep/$HOST}"
+        fi
+    else
+        host_string="$tmux_title_format_ssh"
+    fi
+
+    # We use tmux_string if we are local, and tmux_host_string if we are on ssh
     tmux_string="#{window_bell_flag,!,}${tmux_start_str}${tmux_title_format}"
-    tmux_host_string="#{window_bell_flag,!,}${tmux_start_str}$("$CURRENT_DIR/scripts/get_hoststring.py" | tr -d '[:space:]')"
+    tmux_host_string="#{window_bell_flag,!,}${tmux_start_str}${host_string}"
 
     # Set the title string in tmux
     tmux set -g @title-string "${tmux_string}"
