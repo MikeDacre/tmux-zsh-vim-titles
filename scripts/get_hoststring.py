@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-Get hostname, convert using $zsh_title_hosts if set.
+Get hostname, convert using $tzvt_host_dict if set.
 
-$zsh_title_hosts should have a json style dictionary.
+$tzvt_host_dict should have a json style dictionary.
 """
 import os
 import sys
@@ -69,7 +69,7 @@ def run(cmd, shell=False, check=False, get='all'):
 
 def get_hostname():
     """Get the hostname itself."""
-    host_var = 'zsh_title_hosts'
+    host_var = 'tzvt_host_dict'
     s = os.environ.get(host_var) if host_var in os.environ else '{}'
     s = s.replace("'", '"')
 
@@ -98,7 +98,7 @@ def get_hostname():
 
 def main():
     """Get host string for title."""
-    host_str_var = 'tmux_title_format_ssh'
+    host_str_var = 'tzvt_tmux_title_format_ssh'
     if len(sys.argv) > 1 and '--host-only' in sys.argv:
         return get_hostname()
     h = os.environ.get(host_str_var) if host_str_var in os.environ else '#h:#S:#T'
@@ -107,6 +107,7 @@ def main():
     else:
         host_str = h
     return host_str
+
 
 if __name__ == '__main__' and '__file__' in globals():
     host_string = main()

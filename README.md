@@ -104,17 +104,32 @@ with a variety of shell variables. For example you could change the tmux prompt,
 disable setting the window tab names, or change the delimiter from `:` to
 something else.
 
-For ZSH or Vim, options can be set directly in your shell config, however, tmux
-runs scripts in an isolated subshell, so these configs (e.g. `~/.zshrc` or
-`~/.bashrc`) are not sourced by default.
+All variables can be set in the shell, and are specified in the `defaults.sh`
+config file. Vim variables may also be set in your vimrc, but must be set before
+the plugin is loaded, not after. All variables start with `tzvt_`, plugin
+specific variables are followed by the component name, e.g. `tzvt_vim_<option>`
+or `tzvt_tmux_<option>`. Options that affect more that one component do not have
+a component name, e.g. `tzvt_set_tmux_window_status` is used by every component.
 
-Defaults are set in the `defaults.sh` file in this directory, these are then
-modified by the config at `@tmux_conf`, which defaults to `~/.tmux/profile.sh`.
+I recommend that you create a `~/.tzvt_config` file to store all config
+variables for the titles. You can create it by just duplicating the
+`defaults.sh` file to that location and editing it. To set the location of this
+config file, you can set the `$tzvt_config` shell variable and `@tzvt_config`
+tmux variable to point to whatever config file you would like. This will just be
+sourced prior to running the various components, so you could set it to a
+`.bashrc` or `.zshrc` file if you wanted, but I don't recommend that. This file
+is also not required, you can just set all variables in your `.zshrc` and
+`.vimrc` if you prefer.
+
+Note that in tmux, those config files will not be sourced. The tmux component
+is written in bash and explicitly sources your `~/.bashrc` and `~/.profile` in
+addition to the `$tzvt_config` and `defaults.sh` files.
+
 Ideally, you should copy `defaults.sh` to that location and alter it to git your
 preferences. To do that, do the following:
 
 ```shell
-curl https://raw.githubusercontent.com/MikeDacre/tmux-zsh-vim-titles/master/defaults.sh >> ~/.tmux/profile.sh
+curl https://raw.githubusercontent.com/MikeDacre/tmux-zsh-vim-titles/master/defaults.sh >> ~/.tzvt_config
 echo "source ~/.tmux/profile.sh >> ~/.zshrc"
 echo "source ~/.tmux/profile.sh >> ~/.bashrc"
 ```
@@ -123,20 +138,20 @@ If you would like your config to be somewhere else (e.g., your existing
 profile), add the following line to your `~/.tmux.conf`:
 
 ```
-set -gq @tmux_conf ~/.bash_profile
+set -gq @tzvt_conf ~/.bash_profile
 ```
 
-*Note*: for the tmux plugin only, the user's `~/.bashrc` and `~/.profile` are
+*Reminder*: for the tmux plugin only, the user's `~/.bashrc` and `~/.profile` are
 also sourced, but it doesn't make sense to rely on this.
 
 ### Tmux window updating
 
 By default, only the terminal title is set by all parts of this plugin, to also
 set a mini version of the title in the status line window names, set
-`$tmux_set_window_status` to `true` in your config.
+`$tzvt_set_tmux_window_status` to `true` in your config.
 
 ```shell
-export $tmux_set_window_status=true
+export $tzvt_set_tmux_window_status=true
 ```
 
 ### Tmux title configuration
@@ -148,27 +163,27 @@ replaced with `rt` if you are root.
 These variations are controlled by the following optional variables (dafaults
 displayed):
 
-- `tmux_title_start='t:'`
-- `tmux_title_root='rt:'`
-- `tmux_title_format='#S:#T'`
-- `tmux_title_format_ssh='#h:#S:#T'`
-- `tmux_win_current_fmt='#I:#W#F'`
-- `tmux_win_other_fmt='#I:#W#F'`
-- `zsh_title_hosts='{}'`
+- `tzvt_tmux_title_start='t:'`
+- `tzvt_tmux_title_root='rt:'`
+- `tzvt_tmux_title_format='#S:#T'`
+- `tzvt_tmux_title_format_ssh='#h:#S:#T'`
+- `tzvt_tmux_win_current_fmt='#I:#W#F'`
+- `tzvt_tmux_win_other_fmt='#I:#W#F'`
+- `tzvt_host_dict='{}'`
 
 Note, after altering any of these settings, run `tmux source ~/.tmux.conf` to
 implement the changes.
 
 The format strings that start with a `#` are tmux specific and can be found in
 the tmux man page. `#S` is the session name, `#I` is the window number, `#h` is
-the short hostname, it is modified by `zsh_title_hosts`. This variable holds a
+the short hostname, it is modified by `tzvt_host_dict`. This variable holds a
 JSON dictionary as a string and has hostname replacements, e.g.
 `'{"fraser-server": "lab"}'`. This will convert the hostname fraser-server to
 lab to shorten the title. For example, add something like this to your
 `~/.profile` file and source it from bash and zsh:
 
 ```shell
-export zsh_title_hosts='{
+export tzvt_host_dict='{
     "fraser-server": "lab",
     "esmeralda": "esme",
     "fruster": "fr"
@@ -182,7 +197,7 @@ those other plugins **will not display their titles**.
 
 #### Status Window Renaming
 
-Additionally, if `$tmux_set_window_status` is set to true, the window status
+Additionally, if `$tzvt_set_tmux_window_status` is set to true, the window status
 tabs will also be updated to include the terminal title, by default the window
 status is set to '#F#I:#W', equivalent to
 
@@ -191,8 +206,8 @@ tmux set-window-option -g window-status-current-format "#F#I:#W"
 tmux set-window-option -g window-status-format "#F#I:#W"
 ```
 
-To control these formats if `$tmux_set_window_status` is true, update the
-`$tmux_win_current_fmt` and `$tmux_win_other_fmt` config variables, don't set
+To control these formats if `$tzvt_set_tmux_window_status` is true, update the
+`$tzvt_tmux_win_current_fmt` and `$tzvt_tmux_win_other_fmt` config variables, don't set
 the tmux window options directly, as they will be overwritten.
 
 Note that the window-name will be also be automatically updated by ZSH and
@@ -209,23 +224,29 @@ in the terminal.
 
 There are two variables to customize the ZSH portion of the title:
 
-- `zsh_title_fmt='${cmd}:${path}'`
-- `path_width=40`
+- `tzvt_zsh_title_fmt='${cmd}:${path}'`
+- `tzvt_zsh_path_width=40`
 
-`zsh_title_fmt` controls the overall formatting of the title. Note the single
+`tzvt_zsh_title_fmt` controls the overall formatting of the title. Note the single
 quotes, this is very important to prevent the variable from being expanded to
 early, you must not use `"{cmd}:${path}"`, that will result in the string `:`
 being passed to the plugin.
 
-`path_width` controls the maximum width of the path to the current directory in
+`tzvt_zsh_path_width` controls the maximum width of the path to the current directory in
 the title, if the path is longer than this, only the last n characters of the
 path will be shown. Note, this uses named paths, so HOME is replaced with `~`
 and any hashed directories are replaced with their name, e.g. with
 [cdbk](https://github.com/MikeDacre/cdbk).
 
-If `tmux_set_window_status` is true, then the window-name will be automatically
-updated with a shortened version of the zsh_title_fmt, where `path_width` is
-replaced by `win_path_width`, which defaults to 25.
+If `tzvt_set_tmux_window_status` is true, then the window-name will be automatically
+updated with a shortened version of the tzvt_zsh_title_fmt, where `tzvt_zsh_path_width` is
+replaced by `tzvt_zsh_win_path_width`, which defaults to 25.
+
+Note, ZSH tries to detect if the tmux plugin is installed. If in tmux, it checks
+if the tmux plugin has been initialized. If not in tmux, it looks in the
+`@tmux_plugins` directory for `tmux_zsh_vim_titles`. If you have a non-standard
+plugin config, you probably should set `tzvt_tmux_plugin_installed=true`
+manually.
 
 ### Vim/NVIM title configuration
 
@@ -234,38 +255,38 @@ instead we use `v:<buffer>`, e.g. `v:README.md` or `v:[BUFEXPLORER]`. This title
 is updated immediately on any buffer change, which makes it very useful.
 
 If vim is not updating the titlebar correctly, try setting
-`$vim_force_tmux_title_change`. If this variable is set, the plugin will force
+`$tzvt_vim_force_tmux_title_change`. If this variable is set, the plugin will force
 change the window title to the appropriate vim title and will issue shell title
 instructions to try to force change the terminal title change. This works in
 almost all cases, but there is a slight visual defect+overhead as the vim buffer
 is redrawn on buffer change. For that reason it is off by default. If your vim
-is not setting the title properly, try adding the following to the `@tmux_conf`
+is not setting the title properly, try adding the following to the `@tzvt_conf`
 config, or your `.bashrc`/`.zshrc`/a sourced profile file (only the environment
 of the calling shell matters):
 
-`export vim_force_tmux_title_change=true`
+`export tzvt_vim_force_tmux_title_change=true`
 
-Alternatively, for greater robustness, add `let g:vim_force_tmux_title_change =
+Alternatively, for greater robustness, add `let g:tzvt_vim_force_tmux_title_change =
 1` to your `~/.vimrc`.
 
 The only format that can be changed for the vim title is the prefix, currently
 set as `v:` to keep it out of the way:
 
-- `$vim_title_prefix="v:"` OR `let g:vim_title_prefix = 'v:'`
+- `$tzvt_vim_title_prefix="v:"` OR `let g:tzvt_vim_title_prefix = 'v:'`
 
 Note, you can chose not to install the vim plugin, in which case either you will
 end up with `vim:<path>` in the title, or another title produced internally by
 vim, depending on your settings.
 
 Finally, if you want to add the path to the terminal and window title also, you
-can do so with `vim_include_path`, if this variable equates to `long`, the whole
+can do so with `tzvt_tzvt_vim_include_path`, if this variable equates to `long`, the whole
 path will be included, which can make your titles very large (unless you use ZSH
 named dirs, see below), if it is just `true`, then any directories between you
 and the file are included. To set, either edit the config file to include
-`export vim_include_path='long'` or add the following line to your `~/.vimrc`:
+`export tzvt_tzvt_vim_include_path='long'` or add the following line to your `~/.vimrc`:
 
 ```vim
-let g:vim_include_path = 1 " OR 'long'/'zsh'
+let g:tzvt_tzvt_vim_include_path = 1 " OR 'long'/'zsh'
 ```
 
 Otherwise the path follows the format elsewhere: `t:session:v:file.txt:~/code/`
@@ -273,21 +294,21 @@ Otherwise the path follows the format elsewhere: `t:session:v:file.txt:~/code/`
 To explicily disable the path (the default), set:
 
 ```vim
-let g:vim_include_path = 0
+let g:tzvt_tzvt_vim_include_path = 0
 ```
 
 To make the path go before the filename (more traditional), add this command to
 your `~/.vimrc`:
 
 ```vim
-let g:title_path_before = 1
+let g:tzvt_vim_path_before = 1
 ```
 
 ### Long Paths on ZSH, Plus ZSH Named Directories
 
 If you are using ZSH and Vim, the maximum length of the 'long' path will be set
 at `path_width`, which defaults to *40* chars (this can be overriden just for
-vim by adding `let g:vim_path_width = <len>` to your `~/.vimrc`, or for both vim
+vim by adding `let g:tzvt_vim_pth_width = <len>` to your `~/.vimrc`, or for both vim
 and ZSH by adding `export path_width=<len>` to your `~/.zshrc`.
 
 Furthermore, if you use named directories (specified with `hash -d name=path`),
@@ -297,11 +318,11 @@ config file, which is defined by `$ZSH_BOOKMARKS` and defaults to
 plugin](https://github.com/MikeDacre/cdbk).
 
 To use ZSH paths when in ZSH or no paths at all other times, set
-`g:vim_include_path` to `zsh`.
+`g:tzvt_tzvt_vim_include_path` to `zsh`.
 
 ### Tmux Window Name Alteration
 
-If `tmux_set_window_status` is true, then the window-name will be automatically
+If `tzvt_set_tmux_window_status` is true, then the window-name will be automatically
 changed also, and for the window running vim the current-window-status-format
 will be updated to use the terminal title instead of window name, which allows
 more vim sugar in the title. One side-effect of this is that if you have

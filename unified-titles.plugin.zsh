@@ -5,31 +5,27 @@
 CURRENT_DIR="$(dirname $0:A)"
 
 [ -n "$TMUX" ] && tmux ls >/dev/null 2>/dev/null && in_tmux=true || in_tmux=false
-[ -x "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux" ] && t_plug=true || t_plug=false
 
-# Source tmux profile if available
-if $in_tmux; then
-    TMUX_CONF=$(tmux show-option -gqv @tmux_conf | tr -d "[:space:]")
-fi
-[ -n "$TMUX_CONF" ] || TMUX_CONF="$HOME/.tmux/profile.sh"
-
-if [ -f "$TMUX_CONF" ]; then
-    source "$TMUX_CONF" 2>/dev/null >/dev/null
-fi
+# Get the user config, if it exists (defaults to ~/.tzvt_config)
+. "$CURRENT_DIR/scripts/get_tzvt_config.sh"
 
 # Get default starting strings, no existing variables overwritten.
 # shellcheck source=defaults.sh
-. $CURRENT_DIR/defaults.sh
+. "$CURRENT_DIR/defaults.sh"
+
+# Check if we want to update tmux
+if $in_tmux && [[ $tzvt_zsh_update_tmux == true ]] && [[ $(tmux show-option -gqv tzvt_initialized) == true ]]; then
+    # Check if plugin installed
+    t_plug=true
+else
+    t_plug=false
+fi
 
 # Run the tmux title setting plugin on shell start
 TITLE_PRE=""
-if $in_tmux; then
-    if $t_plug; then
-        "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux"
-    fi
-else
+if ! $in_tmux; then
     if [ -n "$SSH_CONNECTION" ] || [[ $(command -v ps -o comm= -p $PPID) =~ 'ssh' ]]; then
-        if [ -n "$zsh_title_hosts" ]; then
+        if [ -n "$tzvt_host_dict" ]; then
             TITLE_PRE="$($CURRENT_DIR/scripts/get_hoststring.py --host-only | tr -d "[:space:]"):"
         elif [ -n "$HOSTSHORT" ]; then
             TITLE_PRE="${HOSTSHORT}:"
@@ -38,7 +34,6 @@ else
         else
             TITLE_PRE="${HOST}:"
         fi
-
     fi
 fi
 
@@ -50,13 +45,13 @@ function update_title() {
     cmd=${(V)1//\%/\%\%}
     # remove newlines
     cmd=${cmd//$'\n'/}
-    pth="%${pth_width}<...<%~"
-    short_pth="%${win_pth_width}<...<%~"
+    pth="%${tzvt_pth_width}<...<%~"
+    short_pth="%${tzvt_win_pth_width}<...<%~"
 
     # Set core titles
     if [ -n "$cmd" ]; then
-        TITLE=$(eval echo "${zsh_title_fmt}")
-        SHORT_TITLE=$(eval echo "${zsh_title_fmt/$'pth'/short_pth}")
+        TITLE=$(eval echo "${tzvt_zsh_title_fmt}")
+        SHORT_TITLE=$(eval echo "${tzvt_zsh_title_fmt/$'pth'/short_pth}")
     else
         TITLE=${pth}
         SHORT_TITLE=${short_pth}
@@ -87,9 +82,9 @@ function update_title() {
         fi
 
         # Tmux Window Title
-        if [ -n "$tmux_set_window_status" ]; then
+        if [ -n "$tzvt_set_tmux_window_status" ]; then
             # Only set the current window format globally once, as it is overriden elsewhere
-            tmux set-window-option window-status-current-format "${tmux_win_current_fmt}"
+            tmux set-window-option window-status-current-format "${tzvt_tmux_win_current_fmt}"
 
             # Window title is short path
             # print -Pn "\ek${(%)SHORT_TITLE}\e\\"  # Sets window name

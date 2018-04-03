@@ -21,12 +21,12 @@ update_env_from_tmux() {
 main() {
     # Update the shell environment
     update_env_from_tmux
-    # Detect if we are in an SSH session, use script to munge tmux_title_format_ssh
+    # Detect if we are in an SSH session, use script to munge tzvt_tmux_title_format_ssh
 	# if we are, else just use the simple title format
     # Note: SSH_TTY and SSH_CLIENT remain set by children of tmux if tmux started by an
     # SSH session, SSH_CONNECTION is reset though. The below test allows us to know if
     # we are currently accessing the terminal via SSH or not.
-    if [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
+    if [ -n "$SSH_CONNECTION" ] || [[ $(command ps -o comm= -p $PPID) =~ 'ssh' ]]; then
         tmux_string=$(tmux show-option -gqv @title-host-string)
     else
         tmux_string=$(tmux show-option -gqv @title-string)
