@@ -28,7 +28,7 @@ if $in_tmux; then
         "$HOME/.tmux/plugins/tmux-zsh-vim-titles/unified-titles.tmux"
     fi
 else
-    if [ -n "$SSH_CONNECTION" ] || [[ $(ps -o comm= -p $PPID) =~ 'ssh' ]]; then
+    if [ -n "$SSH_CONNECTION" ] || [[ $(command -v ps -o comm= -p $PPID) =~ 'ssh' ]]; then
         TITLE_PRE="$($CURRENT_DIR/scripts/get_hoststring.py --host-only | tr -d "[:space:]"):"
     fi
 fi
