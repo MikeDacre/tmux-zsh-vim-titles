@@ -24,7 +24,7 @@ fi
 # Run the tmux title setting plugin on shell start
 TITLE_PRE=""
 if ! $in_tmux; then
-    if [ -n "$SSH_CONNECTION" ] || [[ $(command -v ps -o comm= -p $PPID) =~ 'ssh' ]]; then
+    if [ -n "$SSH_CONNECTION" ] || [[ $(command ps -o comm= -p $PPID) =~ 'ssh' ]]; then
         if [ -n "$tzvt_host_dict" ]; then
             TITLE_PRE="$($CURRENT_DIR/scripts/get_hoststring.py --host-only | tr -d "[:space:]"):"
         elif [ -n "$HOSTSHORT" ]; then
