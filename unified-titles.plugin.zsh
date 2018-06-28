@@ -63,10 +63,14 @@ function update_title() {
     fi
 
     # Terminal title (work even if ssh from tmux)
-    if [ -n "$TMUX" ] || [[ "$TERM" =~ screen* ]]; then
+    if [ -n "$TMUX" ] && [[ "$TERM" =~ screen* ]]; then
         # print -Pn "\ek${(%)TITLE}\e\\"  # Sets window name
         print -Pn "\e]0;${(%)TITLE}\a"
+    elif [ -n "$KONSOLE_DBUS_SERVICE" ]; then
+        echo ho
+        print -Pn "\033]30;${(%)TITLE}\007"
     elif [[ "$TERM" =~ xterm* ]]; then
+        echo hum
         print -Pn "\e]0;${(%)TITLE}\a"
     elif [[ "$TERM" =~ ^rxvt-unicode.* ]]; then
         printf '\33]2;%s\007' ${(%)TITLE}
