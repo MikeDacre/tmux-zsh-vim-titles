@@ -62,15 +62,18 @@ function update_title() {
         TITLE="${TITLE_PRE}${TITLE}"
     fi
 
-    # Terminal title (work even if ssh from tmux)
-    if [ -n "$TMUX" ] && [[ "$TERM" =~ screen* ]]; then
+    ## Terminal title (work even if ssh from tmux)
+
+    # Emulator dependent, results in double title set with knosole
+    if [ -n "$KONSOLE_DBUS_SERVICE" ]; then
+        print -Pn "\033]30;${(%)TITLE}\007"
+    fi
+
+    # Term dependent
+    if $in_tmux; then
         # print -Pn "\ek${(%)TITLE}\e\\"  # Sets window name
         print -Pn "\e]0;${(%)TITLE}\a"
-    elif [ -n "$KONSOLE_DBUS_SERVICE" ]; then
-        echo ho
-        print -Pn "\033]30;${(%)TITLE}\007"
-    elif [[ "$TERM" =~ xterm* ]]; then
-        echo hum
+    elif [[ "$TERM" =~ screen* ]] || [[ "$TERM" =~ xterm* ]]; then
         print -Pn "\e]0;${(%)TITLE}\a"
     elif [[ "$TERM" =~ ^rxvt-unicode.* ]]; then
         printf '\33]2;%s\007' ${(%)TITLE}
