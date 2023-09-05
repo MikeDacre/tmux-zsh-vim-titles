@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Actually set the tmux terminal title, not the window title
 # Inherits all variables from calling script, used by ZSH and
 # tmux plugin
